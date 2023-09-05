@@ -1,5 +1,6 @@
 
 ## Model files
+d.name <- atlantis_dir
 functional.groups.file <- 'GroupsIceland.csv'
 biomass.pools.file <- 'InitialCond89.nc'
 biol.prm.file <- 'B371.prm'

@@ -11,24 +11,23 @@ library(gadgetutils)
 library(tidyverse)
 library(mfdbatlantis)
 
-#library(mfdb) Load later
-
 ## Read in local scripts - modified scripts from atlantisom allowing > 10 cohorts
-source('cod_demo/src/run_truth_local.R')
-source('cod_demo/src/load_nc_local.R')
-source('cod_demo/src/load_biolprm_local.R')
+source('src/run_truth_local.R')
+source('src/load_nc_cohort.R')
+#source('src/load_nc_local.R')
+source('src/load_biolprm_local.R')
 
 
 ## Some variables
 atlantis_dir <- '../../Atlantis/AtlantisIceland'
 #atlantis_vers <- 'test_run_90d'
 atlantis_vers <- 'test_run'
-base_dir <- 'cod_demo'
+base_dir <- '01-atlantis_to_mfdb'
 
 species_ss <- 'Cod'
 
 ## Set Atlantis file locations
-source(file.path(base_dir, 'config', 'config.R'))
+source(file.path('config', 'config.R'))
 
 ## For mfdbatlantis
 is_dir <- atlantis_directory(path = file.path(atlantis_dir, atlantis_vers),
