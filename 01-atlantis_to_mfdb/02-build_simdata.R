@@ -22,7 +22,7 @@ fitstart <- 20
 fitend <- 65
 saveToData <- FALSE
 outputfolder <- file.path('ms-keyrun/data-raw/atlantisoutput', v.name)
-if (!dir.exists(outputfolder)) dir.create(outputfolder)
+if (!dir.exists(outputfolder)) dir.create(outputfolder, recursive = TRUE)
 
 ## -----------------------------------------------------------------------------
 

@@ -15,7 +15,7 @@ ldist.igfs <-
   mfdb_sample_count(mdb, 
                     c("age", "length"),
                     c(list(
-                      data_source = 'atlantis_survey_aldists',
+                      data_source = 'atlantis_survey_ldists',
                       sampling_type = 'IGFS',
                       age = mfdb_interval("all",c(minage,maxage),
                                           open_ended = c("upper","lower")),
@@ -42,7 +42,7 @@ ldist.aut <-
   mfdb_sample_count(mdb, 
                     c("age", "length"),
                     c(list(
-                      data_source = 'atlantis_survey_aldists',
+                      data_source = 'atlantis_survey_ldists',
                       sampling_type = 'AUT',
                       age = mfdb_interval("all",c(minage,maxage),
                                           open_ended = c("upper","lower")),
@@ -69,7 +69,7 @@ ldist.sea <-
   mfdb_sample_count(mdb, 
                     c("age", "length"),
                     c(list(
-                      data_source = 'atlantis_survey_aldists',
+                      data_source = 'atlantis_survey_ldists',
                       sampling_type = 'SEA',
                       age = mfdb_interval("all",c(minage,maxage),
                                           open_ended = c("upper","lower")),

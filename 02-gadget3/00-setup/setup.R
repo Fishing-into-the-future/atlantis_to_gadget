@@ -61,8 +61,8 @@ optim_controls <- list(maxit = 2000, reltol = sqrt(.Machine$double.eps))
 ## PARAMETERS
 ## -----------------------------------------------------------------------------
 
-year_range <- 1948:2012
-species_name <- 'FCD'
+year_range <- 20:65
+species_name <- 'COD'
 
 ## -----------------------------------------------------------------------------
 
@@ -97,7 +97,7 @@ if (single_stock_model){
 
 ## Load data objects ----------------------------------------------------------
 if(read_data){
-  mdb <- mfdb::mfdb(file.path('db', 'atlantisiceland2.duckdb'))
+  mdb <- mfdb::mfdb(file.path('db', 'atlantisiceland.duckdb'))
   #mdb <- mfdb("../../mfdb/copy/iceland.duckdb")
   source(file.path(base_dir, '00-setup/setup-fleet-data.R'))
   source(file.path(base_dir, '00-setup/setup-catchdistribution.R'))
