@@ -47,4 +47,4 @@ fisheffN$effN <- fisheffN$effN/fstepperyr
 
 # fishery catch cv can be used in sample_survey_biomass
 # perfect observation
-fish_cv <- data.frame(species=survspp, cv=0)
+fish_cv <- data.frame(species=survspp, cv=0.01)

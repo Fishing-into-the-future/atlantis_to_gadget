@@ -27,7 +27,7 @@ base_dir <- '01-atlantis_to_mfdb'
 species_ss <- 'Cod'
 
 ## Set Atlantis file locations
-source(file.path('config', 'config.R'))
+source(file.path('config', 'test_run.R'))
 
 ## For mfdbatlantis
 is_dir <- atlantis_directory(path = file.path(atlantis_dir, atlantis_vers),

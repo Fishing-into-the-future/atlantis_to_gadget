@@ -90,6 +90,8 @@ om_index_isl <- function(usersurvey = usersurvey_file,
     if(save){
       saveRDS(survObsBiomB, file.path(d.name, paste0(scenario.name, "_",
                                                      survey.name, "surveyB.rds")))
+      saveRDS(survObsNumB, file.path(d.name, paste0(scenario.name, "_",
+                                                     survey.name, "surveyN.rds")))
     }
     
     survObsBiomBs[[survey.name]] <- survObsBiomB

@@ -9,7 +9,7 @@ library(mfdbatlantis)
 
 
 #mfdb(file.path(base_dir, 'db', 'atlantis_iceland_test_db.duckdb'), destroy_schema = TRUE)
-mdb <- mfdb(file.path(base_dir, 'db', 'atlantis_iceland_test_db.duckdb'))
+mdb <- mfdb(file.path('db', 'atlantisiceland2.duckdb'))
 
 ## -----------------------------------------------------------------------------
 ## Areas

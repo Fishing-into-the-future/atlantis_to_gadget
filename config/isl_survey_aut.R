@@ -64,7 +64,7 @@ surv_cv <- data.frame(species=survspp, cv=rep(0,length(survspp)))
 
 # length at age cv for input into calc_age2length function
 # function designed to take one cv for all species, need to change to pass it a vector
-lenage_cv <- 0
+lenage_cv <- 0.1
 
 # max size bin for length estimation, function defaults to 150 cm if not supplied
 maxbin <- 150

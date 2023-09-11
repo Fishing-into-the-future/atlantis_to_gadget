@@ -29,7 +29,7 @@ base_dir <- '01-atlantis_to_mfdb'
 species_ss <- 'Cod'
 
 ## Set Atlantis file locations
-source(file.path('config', 'config.R'))
+source(file.path('config', 'test_run.R'))
 
 ## For mfdbatlantis
 is_dir <- atlantis_directory(path = file.path(atlantis_dir, atlantis_vers),
@@ -46,24 +46,24 @@ is_dir <- atlantis_directory(path = file.path(atlantis_dir, atlantis_vers),
 ## need to account for > 10 cohorts.
 ## NOTE, the option of annage = TRUE should do this but not present in the Icelandic simulations
 
-iceom <- om_init(file.path('config', 'config.R'), atlantis_dir)
+iceom <- om_init(file.path('config', 'test_run.R'), atlantis_dir)
 print(names(iceom))
-iceom_ms <- om_species(species_ss, iceom, save = FALSE)
-saveRDS(iceom_ms, file.path(atlantis_dir, paste0(scenario.name, "omlist_ss.rds")))
+iceom_ms <- om_species(species_ss, iceom, save = TRUE)
+#saveRDS(iceom_ms, file.path(atlantis_dir, paste0(scenario.name, "omlist_ss.rds")))
 print(names(iceom_ms))
 
 
 iceom_ms_ind <- om_index_isl(usersurvey = c("config/isl_survey_igfs.R", "config/isl_survey_aut.R"),
-                         userfishery = c("config/isl_fishery.R"),
-                         omlist_ss = iceom_ms, 
-                         n_reps = 1, 
-                         save = FALSE)
+                             userfishery = c("config/isl_fishery.R"),
+                             omlist_ss = iceom_ms, 
+                             n_reps = 1, 
+                             save = TRUE)
 
 iceom_ms_comp <- om_comps(usersurvey = c("config/isl_survey_igfs.R", "config/isl_survey_aut.R"),
-                           userfishery = c("config/isl_fishery.R"),
-                           omlist_ss = iceom_ms, 
-                           n_reps = 1, 
-                           save = FALSE)
+                          userfishery = c("config/isl_fishery.R"),
+                          omlist_ss = iceom_ms, 
+                          n_reps = 1, 
+                          save = TRUE)
 
 # NOBAom_ms_diet <- om_diet(config = here("simulated-data/config", "NOBA2config.R"),
 #                           dietfile = "NOBADetDiet.gz",

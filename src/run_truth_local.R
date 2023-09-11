@@ -22,8 +22,9 @@ om_init <- function(config = configfile, d.name){
   funct.groups <- atlantisom::load_fgs(dir=d.name,
                                        file_fgs = functional.groups.file)
   #Get just the names of active functional groups
-  funct.group.names <- funct.groups %>%
-    filter(IsTurnedOn == 1) %>%
+  funct.group.names <- 
+    funct.groups %>% 
+    filter(IsTurnedOn == 1, (Name %in% local(species_ss))) %>% # HACK FOR NOW GroupType == 'FISH') %>%
     select(Name) %>%
     .$Name
   
@@ -122,7 +123,6 @@ run_truth <- function(scenario, dir = getwd(),
   #Extract from NetCDF files
   # Need: dir, file_nc, bps, fgs, select_groups, select_variable,
   # check_acronyms, bboxes
-
   nums <- load_nc_cohort(dir = dir,
                          file_nc = nc_out,
                          bps = bps,
@@ -195,7 +195,7 @@ run_truth <- function(scenario, dir = getwd(),
                  check_acronyms = TRUE,
                  bboxes = boxes)
   if(verbose) message("Catch read in.")
-
+  
   if(annage){
     numsage <- load_nc_annage(dir = dir,
                               file_nc = nc_annagebio,
