@@ -49,7 +49,7 @@ surveffic <- data.frame(species=survspp,
 # for annage output uses names(annages) NOT alphabetical survspp
 survselex <- data.frame(species=rep(names(annages), n_annages), #  
                         agecl=unlist(sapply(n_annages,seq)),
-                        selex=rep(1.0,sum(n_annages)))
+                        selex=c(rep(0, 3), rep(1.0,sum(n_annages-3))))
 
 survselex.agecl <- survselex
 
@@ -60,7 +60,7 @@ surveffN <- data.frame(species=survspp, effN=rep(100000, length(survspp)))
 
 # survey index cv needed for sample_survey_xxx
 # cv = 0.1
-surv_cv <- data.frame(species=survspp, cv=rep(0,length(survspp)))
+surv_cv <- data.frame(species=survspp, cv=rep(0.1,length(survspp)))
 
 # length at age cv for input into calc_age2length function
 # function designed to take one cv for all species, need to change to pass it a vector

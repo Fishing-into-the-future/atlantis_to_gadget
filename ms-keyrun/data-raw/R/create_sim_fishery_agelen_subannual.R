@@ -1,6 +1,6 @@
-#' Read in survey data save as rda
+#' Read in fishery data save as rda
 #' 
-#' atlantosom output is accessed and surveys pulled over time
+#' atlantosom output is accessed and fishery catch pulled over time
 #' 
 #'@param atlmod configuration file specifying Atlantis simulation model filenames 
 #'and locations  
@@ -11,16 +11,17 @@
 #'\item{year}{year simulated survey conducted}
 #'\item{Code}{Atlantis model three letter code for functional group}
 #'\item{Name}{Atlantis model common name for functional group}
-#'\item{survey}{simulated survey name}
-#'\item{age}{annual age of Atlantis functinal group}
-#'\item{variable}{number at age (Natage)}
+#'\item{fishery}{simulated fishery name}
+#'\item{agecl}{age class of Atlantis functional group}
+#'\item{lenbin}{1 cm length bin, lower limit}
+#'\item{variable}{number at length (Natlen)}
 #'\item{value}{value of the variable}
 #'\item{units}{units of the variable}
 #'
 
 library(magrittr)
 
-create_sim_survey_agecomp <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=T) {
+create_sim_fishery_agelen_subannual <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=T) {
 
   # input is path to model config file for atlantisom
   source(atlmod)
@@ -33,10 +34,10 @@ create_sim_survey_agecomp <- function(atlmod,fitstart=NULL,fitend=NULL,saveToDat
   modsim <- modpath[length(modpath)]
   
   #read in survey annual age comp data
-  annage_comp_data <- atlantisom::read_savedsurvs(file.path(d.name, v.name), 'survAnnAge')
+  catchlen_ss <- atlantisom::read_savedfisheries(file.path(d.name,v.name), "catchLen")
   
   # get config files -- needed?
-  svcon <- list.files(path=cfgpath, pattern = "*survey*", full.names = TRUE)
+  fvcon <- list.files(path=cfgpath, pattern = "*fishery*", full.names = TRUE)
   
   # read true list with run and biol pars, etc
   omlist_ss <- readRDS(file.path(d.name, paste0(scenario.name, "omlist_ss.rds")))
@@ -47,6 +48,9 @@ create_sim_survey_agecomp <- function(atlmod,fitstart=NULL,fitend=NULL,saveToDat
   #Number of years
   nyears <- omlist_ss$runpar$nyears
   total_sample <- omlist_ss$runpar$tstop/omlist_ss$runpar$outputstep
+  
+  # throw an error if fstepperyr is not equal to stepperyr
+  if(stepperyr != fstepperyr) stop("Error: check Atlantis timestep output for fishery")
   
   # user specified fit start and times if different from full run
   fitstartyr <- ifelse(!is.null(fitstart), fitstart-1, 0)
@@ -59,50 +63,52 @@ create_sim_survey_agecomp <- function(atlmod,fitstart=NULL,fitend=NULL,saveToDat
   fittimes <- atlantis_full[mod_burnin:(mod_burnin+fit_ntimes-1)]
   #fit_timesteps <- seq(fittimes[stepperyr], max(fittimes), by=stepperyr) #last timestep
   #fit_years <- unique(floor(fittimes/stepperyr)) #from Christine's new sardine_config.R
-  #fittimes.days <- if(omlist_ss$runpar$outputstepunit=="days") fittimes*omlist_ss$runpar$outputstep
+  fittimes.days <- if(omlist_ss$runpar$outputstepunit=="days") fittimes*omlist_ss$runpar$outputstep
   
-  
-  # # survey cv lookup from config files
-  # svcvlook <- tibble::tibble()
-  # for(c in 1:length(svcon)){
-  #   source(svcon[c], local = TRUE)
-  #   surv_cv_n <- surv_cv %>% 
-  #     dplyr::mutate(survey=survey.name)
-  #   svcvlook <- dplyr::bind_rows(svcvlook, surv_cv_n)
+  # # fishery cv lookup from config files
+  # fcvlook <- tibble::tibble()
+  # for(c in 1:length(fishcon)){
+  #   source(fishcon[c], local = TRUE)
+  #   fish_cv_n <- fish_cv %>%
+  #     dplyr::mutate(fishery=fishery.name)
+  #   fcvlook <- dplyr::bind_rows(fcvlook, fish_cv_n)
   # }
   
-  allsvage <- tibble::tibble()
+  allfishlenbin <- tibble::tibble()
   
   #multiple surveys named in list object
-  for(s in names(annage_comp_data)){
+  for(f in names(catchlen_ss)){
     #arrange into wide format: year, Species1, Species2 ... and write csv
-    svage <- annage_comp_data[[s]][[1]] %>%
+    fishlenbin <- catchlen_ss[[f]][[1]] %>%
       dplyr::filter(time %in% fittimes) %>%
-      dplyr::mutate(year = ceiling(time/stepperyr)) %>%
-      dplyr::select(species, year, agecl, atoutput) %>%
-      dplyr::rename(Natage = atoutput) %>%
+      dplyr::mutate(year = ceiling(time/stepperyr),
+                    fishMonth = 12 + ceiling(time/stepperyr*12) - year*12) %>%
+      dplyr::select(species, agecl, fishMonth, year, lower.bins, atoutput) %>%
+      dplyr::group_by(species, agecl, year, fishMonth, lower.bins) %>%
+      dplyr::summarise(Natlen = sum(atoutput)) %>%
+      dplyr::ungroup() %>%
       dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%
       dplyr::mutate(ModSim = modsim) %>%
-      dplyr::mutate(survey = s) %>%
-      #dplyr::left_join(svcvlook) %>%
-      dplyr::select(ModSim, year, Code, Name=species, survey, age=agecl, everything()) %>%
-      tidyr::pivot_longer(cols = c("Natage"), 
+      dplyr::mutate(fishery = f) %>%
+      #dplyr::left_join(fvcvlook) %>%
+      dplyr::select(ModSim, year, fishMonth, Code, Name=species, fishery, agecl, lenbin=lower.bins, everything()) %>%
+      tidyr::pivot_longer(cols = c("Natlen"), 
                           names_to = "variable",
                           values_to = "value") %>%
-      dplyr::mutate(units = ifelse(variable=="Natage", "number", "NA")) %>%
-      dplyr::arrange(Name, survey, variable, year, age)
+      dplyr::mutate(units = ifelse(variable=="Natlen", "number", "NA")) %>%
+      dplyr::arrange(Name, fishery, variable, year, fishMonth, agecl, lenbin)
     
-    allsvage <- dplyr::bind_rows(allsvage, svage)
+    allfishlenbin <- dplyr::bind_rows(allfishlenbin, fishlenbin)
   }
   
-  simSurveyAgecomp <- allsvage
+  simFisheryAgeLencompSubannual <- allfishlenbin
   
   if (saveToData) {
   
-    usethis::use_data(simSurveyAgecomp, overwrite = TRUE)
+    usethis::use_data(simFisheryAgeLencomp, overwrite = TRUE)
   }
   
-  return(simSurveyAgecomp)
+  return(simFisheryAgeLencompSubannual)
   
   
 }

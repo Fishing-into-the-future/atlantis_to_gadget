@@ -15,10 +15,10 @@ fishery.name <- "SEA"
 fishspp <- omlist_ss$species_ss 
 
 #Number of years of data to pull
-nyears <- 35
+nyears <- 73
 
 #Atlantis initialization period in years
-burnin <- 30
+burnin <- 0
 
 # same time dimensioning parameters as in surveycensus.R
 #Vector of indices of catch in numbers to pull (by timestep to sum)
@@ -47,4 +47,4 @@ fisheffN$effN <- fisheffN$effN/fstepperyr
 
 # fishery catch cv can be used in sample_survey_biomass
 # perfect observation
-fish_cv <- data.frame(species=survspp, cv=0.01)
+fish_cv <- data.frame(species=survspp, cv=0.001)

@@ -57,8 +57,8 @@ create_sim_survey_bottemp <- function(atlmod,fitstart=NULL,fitend=NULL,saveToDat
   
   
   # extract true atlantis temperature
-  truetemp <- atlantisom::load_nc_physics(dir = d.name,
-                                          file_nc = "nordic_runresults_01.nc",
+  truetemp <- atlantisom::load_nc_physics(dir = file.path(d.name, v.name),
+                                          file_nc = "Out.nc",
                                           physic_variables = "Temp",
                                           aggregate_layers = FALSE,
                                           bboxes = atlantisom::get_boundary(omlist_ss$boxpars))

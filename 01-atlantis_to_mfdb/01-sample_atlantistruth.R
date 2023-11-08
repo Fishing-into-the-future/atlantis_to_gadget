@@ -21,19 +21,18 @@ source('src/om_list_isl.R')
 
 
 ## Some variables
-atlantis_dir <- '../../Atlantis/AtlantisIceland'
-#atlantis_vers <- 'test_run_90d'
-atlantis_vers <- 'test_run'
+atlantis_dir <- '../../Atlantis/AtlantisIceland/v6610'
 base_dir <- '01-atlantis_to_mfdb'
 
 species_ss <- 'Cod'
 
 ## Set Atlantis file locations
-source(file.path('config', 'test_run.R'))
+config_file <- file.path('config', 'v6610.R')
+source(config_file)
 
 ## For mfdbatlantis
-is_dir <- atlantis_directory(path = file.path(atlantis_dir, atlantis_vers),
-                             xml_bio = mfdbatlantis:::first_file(file.path(atlantis_dir, atlantis_vers), '*[Bb]*.xml'),
+is_dir <- atlantis_directory(path = file.path(atlantis_dir, 'Out'),
+                             xml_bio = mfdbatlantis:::first_file(file.path(atlantis_dir, 'Out'), '*[Bb]*.xml'),
                              start_year = 1948)
 
 ## -----------------------------------------------------------------------------
@@ -46,7 +45,7 @@ is_dir <- atlantis_directory(path = file.path(atlantis_dir, atlantis_vers),
 ## need to account for > 10 cohorts.
 ## NOTE, the option of annage = TRUE should do this but not present in the Icelandic simulations
 
-iceom <- om_init(file.path('config', 'test_run.R'), atlantis_dir)
+iceom <- om_init(config_file, atlantis_dir)
 print(names(iceom))
 iceom_ms <- om_species(species_ss, iceom, save = TRUE)
 #saveRDS(iceom_ms, file.path(atlantis_dir, paste0(scenario.name, "omlist_ss.rds")))

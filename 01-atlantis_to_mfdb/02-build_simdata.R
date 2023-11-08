@@ -12,101 +12,123 @@
 #' get_sim_survey_index.R
 #' 
 #' run from ms-keyrun directory
+#' 
+#' ### ---------------------------------------------------
+
+
 
 library(tidyverse)
 
 for (i in dir('ms-keyrun/data-raw/R')) source(file.path('ms-keyrun/data-raw/R', i))
 
-atlmod <- file.path("config/test_run.R")
-fitstart <- 20
-fitend <- 65
+fitstart <- 10
+fitend <- 73
 saveToData <- FALSE
 outputfolder <- file.path('ms-keyrun/data-raw/atlantisoutput', v.name)
 if (!dir.exists(outputfolder)) dir.create(outputfolder, recursive = TRUE)
 
 ## -----------------------------------------------------------------------------
 
-#create_sim_focal_species(atlmod)
+#create_sim_focal_species(config_file)
 
 ## Need to check predator/prey ratio (not included atm)
-simBiolPar <- create_sim_biolpar(atlmod, saveToData=saveToData)
+simBiolPar <- create_sim_biolpar(config_file, saveToData=saveToData)
 saveRDS(simBiolPar, file.path(outputfolder, "simBiolPar.rds"))
 
-simSurveyInfo <- create_sim_survey_info(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-saveRDS(simSurveyInfo, file.path(outputfolder, "simSurveyInfo.rds"))
-
-simSurveyIndex <- create_sim_survey_index(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-saveRDS(simSurveyIndex, file.path(outputfolder, "simSurveyIndex.rds"))
-
-## SEE BOTTOM FOR LANDINGS
-simCatchIndexSubannual <- create_sim_fishery_index_isl(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData) #creates subannual amd aggregate
-saveRDS(simCatchIndexSubannual, file.path(outputfolder, "simCatchIndexSubannual.rds"))
-
-## Age composition
-#create_sim_survey_agecomp(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-
-#create_sim_fishery_agecomp(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-
-#create_sim_fishery_agecomp_subannual(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-
-## Length composition data
-simSurveyLencomp <- create_sim_survey_lencomp(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-saveRDS(simSurveyLencomp, file.path(outputfolder, "simSurveyLencomp.rds"))
-
-simFisheryLencomp <- create_sim_fishery_lencomp(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-saveRDS(simFisheryLencomp, file.path(outputfolder, "simFisheryLencomp.rds"))
-
-simFisheryLencompSubannual <- create_sim_fishery_lencomp_subannual(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-saveRDS(simFisheryLencompSubannual, file.path(outputfolder, "simFisheryLencompSubannual.rds"))
-
-## Diet
-#simSurveyDietcomp <- create_sim_survey_dietcomp(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-#saveRDS(simSurveyDietcomp, file.path(outputfolder, "simSurveyDietcomp.rds"))
-
-## Temperature
-#simSurveyBottemp <- create_sim_survey_bottemp(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-#saveRDS(simSurveyBottemp, file.path(outputfolder, "simSurveyBottemp.rds"))
-
-simFisheryWtatAge <- create_sim_fishery_wtage(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-saveRDS(simFisheryWtatAge, file.path(outputfolder, "simFisheryWtatAge.rds"))
-
-simFisheryWtatAgeSubannual <- create_sim_fishery_wtage_subannual(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-saveRDS(simFisheryWtatAgeSubannual, file.path(outputfolder, "simFisheryWtatAgeSubannual.rds"))
-
-simSurveyWtatAge <- create_sim_survey_wtage(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-saveRDS(simSurveyWtatAge, file.path(outputfolder, "simSurveyWtatAge.rds"))
-
-simSurveyAgeLencomp <- create_sim_survey_agelen(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-saveRDS(simSurveyAgeLencomp, file.path(outputfolder, "simSurveyAgeLencomp.rds"))
-
-simFisheryAgeLencomp <- create_sim_fishery_agelen(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-saveRDS(simFisheryAgeLencomp, file.path(outputfolder, "simFisheryAgeLencomp.rds"))
-
-#simPerCapCons <- create_sim_percapconsumption(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-#saveRDS(simPerCapCons, file.path(outputfolder, "simPerCapCons.rds"))
-
-simStartPars <- create_sim_startpars(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+## (1) Initial population by age, (2) initial population by age-length, (3) average recruitment
+simStartPars <- create_sim_startpars(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
 saveRDS(simStartPars, file.path(outputfolder, "simStartPars.rds"))
 
-# food web model specific datasets add other species
+## Temperature
 
-#simSurveyIndexFW <- create_sim_survey_index_fw(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-#saveRDS(simSurveyIndexFW, file.path(outputfolder, "simSurveyIndexFW.rds"))
+# NOTE:
+# Warning message from atlantisom::load_nc_physics
+# In atlantisom::load_nc_physics(dir = file.path(d.name, v.name),  :
+# 0% of entries are min-pools (0, 1e-08, 1e-16)
 
-#simCatchIndexSubannualFW <- create_sim_fishery_index_fw(atlmod, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-#saveRDS(simCatchIndexSubannualFW, file.path(outputfolder, "simCatchIndexSubannualFW.rds"))
+simSurveyBottemp <- create_sim_survey_bottemp(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+saveRDS(simSurveyBottemp, file.path(outputfolder, "simSurveyBottemp.rds"))
 
-# below combines already loaded mskeyrun datasets,  
-# outputs of create_sim_survey_agelen and create_sim_survey_dietcomp
-# ensure that these are up to date before running
+## -----------------------------------------------------------------------------
+## SURVEY DATASETS
+## -----------------------------------------------------------------------------
 
-#create_sim_survey_lendietcomp()
+## General info
+simSurveyInfo <- create_sim_survey_info(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+saveRDS(simSurveyInfo, file.path(outputfolder, "simSurveyInfo.rds"))
 
-iceom$truth$catch %>% filter(species %in% species_ss)
+## Biomass index
+simSurveyIndex <- create_sim_survey_index(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+saveRDS(simSurveyIndex, file.path(outputfolder, "simSurveyIndex.rds"))
 
+## Length composition 
+simSurveyLencomp <- create_sim_survey_lencomp(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+saveRDS(simSurveyLencomp, file.path(outputfolder, "simSurveyLencomp.rds"))
 
+## Age composition 
+## No ANNAGE files
+#simSurveyAgecomp <- create_sim_survey_agecomp(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+#saveRDS(simSurveyAgecomp, file.path(outputfolder, "simSurveyAgecomp.rds"))
 
+## ALK
+simSurveyAgeLencomp <- create_sim_survey_agelen(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+saveRDS(simSurveyAgeLencomp, file.path(outputfolder, "simSurveyAgeLencomp.rds"))
+
+## Weight at age
+simSurveyWtatAge <- create_sim_survey_wtage(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+saveRDS(simSurveyWtatAge, file.path(outputfolder, "simSurveyWtatAge.rds"))
+
+## -----------------------------------------------------------------------------
+## COMMERCIAL DATASETS
+## -----------------------------------------------------------------------------
+
+## Length composition, just subannual needed
+simFisheryLencomp <- create_sim_fishery_lencomp(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+saveRDS(simFisheryLencomp, file.path(outputfolder, "simFisheryLencomp.rds"))
+
+## Length composition subannual
+simFisheryLencompSubannual <- create_sim_fishery_lencomp_subannual(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+saveRDS(simFisheryLencompSubannual, file.path(outputfolder, "simFisheryLencompSubannual.rds"))
+
+## Age composition
+## No ANNAGE files
+#simFisheryAgecomp <- create_sim_fishery_agecomp(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+#saveRDS(simFisheryAgecomp, file.path(outputfolder, "simFisheryAgecomp.rds"))
+
+## Age composition subannual
+#simFisheryAgecompSubannual <- create_sim_fishery_agecomp_subannual(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+#saveRDS(simFisheryAgecompSubannual, file.path(outputfolder, "simFisheryAgecompSubannual.rds"))
+
+## ALK
+simFisheryAgeLencomp <- create_sim_fishery_agelen(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+saveRDS(simFisheryAgeLencomp, file.path(outputfolder, "simFisheryAgeLencomp.rds"))
+
+## age-length distributions
+simFisheryAgeLencompSubannual <- create_sim_fishery_agelen_subannual(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+saveRDS(simFisheryAgeLencompSubannual, file.path(outputfolder, "simFisheryAgeLencompSubannual.rds"))
+
+## Weight at age
+simFisheryWtatAge <- create_sim_fishery_wtage(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+saveRDS(simFisheryWtatAge, file.path(outputfolder, "simFisheryWtatAge.rds"))
+
+## Weight at age subanual
+simFisheryWtatAgeSubannual <- create_sim_fishery_wtage_subannual(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+saveRDS(simFisheryWtatAgeSubannual, file.path(outputfolder, "simFisheryWtatAgeSubannual.rds"))
+
+## -----------------------------------------------------------------------------
 ## LANDINGS
+## -----------------------------------------------------------------------------
+
+## The create_sim_fishery_index utilises the catch.txt, however,
+## this only contains annual catches and does not match the .nc output
+## therefore using mfdbatlantis for catches
+
+## Going to go with mfdbatlantis here...
+## Because the stock_truth$catch looks odd... to do with the log.txt?
+
+#simCatchIndexSubannual <- create_sim_fishery_index(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData) #creates subannual amd aggregate
+#saveRDS(simCatchIndexSubannual, file.path(outputfolder, "simCatchIndexSubannual.rds"))
+
 area_data <- NULL
 for (i in seq_along(iceom_ms$boxpars$boxes)){
   tmp <- data.frame(id = i,
@@ -115,13 +137,10 @@ for (i in seq_along(iceom_ms$boxpars$boxes)){
   area_data <- rbind(area_data, tmp)
 }
 
-## Going to go with mfdbatlantis here...
-## Because the stock_truth$catch looks odd... to do with the log.txt?
-
 ## Read fishery types & upload as gears
 is_fisheries <- 
   mfdbatlantis:::fetch_xml_attributes(XML::xmlParse(attr(is_dir, "xml_fisheries")), "Fishery", 
-                                       c("Code", "Index", "Name", "IsRec", "NumSubFleets"), stringsAsFactors = FALSE)
+                                      c("Code", "Index", "Name", "IsRec", "NumSubFleets"), stringsAsFactors = FALSE)
 
 fisherydata <- NULL
 for (fisheryCode in is_fisheries$Code){
@@ -146,10 +165,36 @@ for (fisheryCode in is_fisheries$Code){
   
 }
 
+fisherydata <- 
+  fisherydata %>% 
+  mutate(ModSim = unique(simFisheryLencomp$ModSim),
+         time = year - (1948-1)) %>% 
+  rename(fishMonth = month,
+         Code = functional_group) %>% 
+  select(-species)
 
+saveRDS(fisherydata, file.path(outputfolder, "fisherydata.rds"))
 
+## -----------------------------------------------------------------------------
+## Food web and diet
+## -----------------------------------------------------------------------------
 
+## Diet
+#simSurveyDietcomp <- create_sim_survey_dietcomp(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+#saveRDS(simSurveyDietcomp, file.path(outputfolder, "simSurveyDietcomp.rds"))
 
+#simPerCapCons <- create_sim_percapconsumption(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+#saveRDS(simPerCapCons, file.path(outputfolder, "simPerCapCons.rds"))
 
+# food web model specific datasets add other species
+#simSurveyIndexFW <- create_sim_survey_index_fw(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+#saveRDS(simSurveyIndexFW, file.path(outputfolder, "simSurveyIndexFW.rds"))
 
+#simCatchIndexSubannualFW <- create_sim_fishery_index_fw(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+#saveRDS(simCatchIndexSubannualFW, file.path(outputfolder, "simCatchIndexSubannualFW.rds"))
 
+# below combines already loaded mskeyrun datasets,  
+# outputs of create_sim_survey_agelen and create_sim_survey_dietcomp
+# ensure that these are up to date before running
+
+#create_sim_survey_lendietcomp()
