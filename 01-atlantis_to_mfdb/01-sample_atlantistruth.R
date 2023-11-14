@@ -18,6 +18,9 @@ source('src/load_nc_cohort.R')
 #source('src/load_nc_local.R')
 source('src/load_biolprm_local.R')
 source('src/om_list_isl.R')
+source('src/om_comps_isl.R')
+source('src/sample_ages_isl.R')
+source('src/calc_age2length_isl.R')
 source('src/sample_survey_biomass_box.R')
 source('src/sample_survey_numbers_box.R')
 
@@ -58,16 +61,18 @@ print(names(iceom_ms))
 
 
 iceom_ms_ind <- om_index_isl(usersurvey = c("config/isl_survey_igfs.R", "config/isl_survey_aut.R"),
-                             userfishery = c("config/isl_fishery.R"),
+                             userfishery = NULL, #c("config/isl_fishery.R"),
                              omlist_ss = iceom_ms, 
                              n_reps = nreps, 
                              save = TRUE)
 
-iceom_ms_comp <- om_comps(usersurvey = c("config/isl_survey_igfs.R", "config/isl_survey_aut.R"),
-                          userfishery = c("config/isl_fishery.R"),
-                          omlist_ss = iceom_ms, 
-                          n_reps = nreps, 
-                          save = TRUE)
+iceom_ms_comp <- om_comps_isl(usersurvey = c("config/isl_survey_igfs.R", "config/isl_survey_aut.R"),
+                              userfishery = c("config/isl_fishery.R"),
+                              omlist_ss = iceom_ms, 
+                              n_reps = nreps, 
+                              save = TRUE)
+
+
 
 # NOBAom_ms_diet <- om_diet(config = here("simulated-data/config", "NOBA2config.R"),
 #                           dietfile = "NOBADetDiet.gz",

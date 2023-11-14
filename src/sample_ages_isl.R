@@ -43,6 +43,7 @@ sample_ages <- function(dat,prop,ageErr=NULL) {
       sampVec <- rep(dat2$agecl,times=dat2$atoutput)
       samp <- sample(sampVec, nn, replace=FALSE)
       sampTable <- table(samp)
+      
       dat2$numAtAgeSamp <- sampTable[match(dat2$agecl, names(sampTable))]
       dat2$numAtAgeSamp[is.na(dat2$numAtAgeSamp)] <- 0
       #probs <- matrix(dat2$atoutput,nrow=1)
@@ -61,3 +62,53 @@ sample_ages <- function(dat,prop,ageErr=NULL) {
   
   return(out)
 }
+
+## Re-write of atlantisom::sample_ages that enables age distributions to be sampled
+## from length distributions. Means we don't need to re-run calc_len2age on sub-samples of age
+## Not included the age-reading error part yet
+sample_ages_isl <- function(dat, prop){
+  
+  sampling_fun <- function(dat, prop){
+    
+    ind <- sample(1:sum(dat$atoutput), prop*sum(dat$atoutput), replace = FALSE)
+    ages <- rep(dat$agecl, dat$atoutput)[ind]
+    
+    ## Age-length data?
+    if ('lower.bins' %in% names(dat)){
+      samps <- paste(ages, 
+                     rep(dat$lower.bins, dat$atoutput)[ind],
+                     rep(dat$upper.bins, dat$atoutput)[ind], sep = '-')
+      dat$id <- paste(dat$agecl, dat$lower.bins, dat$upper.bins, sep = '-')
+    }else{
+      samps <- ages
+      dat$id <- dat$agecl
+    }
+    
+    sampTable <- as.data.frame(table(id = samps), stringsAsFactors = FALSE, responseName = 'numAtAgeSamp')
+    
+    ## Merge in numbers
+    out <- merge(dat, sampTable, by = 'id', all = TRUE)
+    out$numAtAgeSamp[is.na(out$numAtAgeSamp)] <- 0
+    
+    return(out[, names(out) != 'id'])
+    
+  }
+  
+  ## Loop over species
+  by_species <- lapply(split(dat, dat$species), function(sdat, prop){
+    sp <- prop[prop$species == unique(sdat$species), 'prop']
+    ## And time
+    return(do.call('rbind', lapply(split(sdat, sdat$time), sampling_fun, sp)))
+  }, prop = prop)
+  
+  out <- do.call('rbind', by_species)
+  if ('lower.bins' %in% names(dat)) out <- out[order(out$species, out$time, out$lower.bins),]
+  else  out <- out[order(out$species, out$time),]
+  rownames(out) <- 1:nrow(out)
+  return(out)
+  
+}
+
+
+
+

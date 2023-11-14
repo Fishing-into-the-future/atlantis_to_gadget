@@ -102,29 +102,35 @@ om_index_isl <- function(usersurvey = usersurvey_file,
     survObsNumBs[[survey.name]] <- survObsNumB
   }
   
+  indices <- list("survObsBiomB" = survObsBiomBs,
+                  "survObsNumB" = survObsNumBs)
+  
   #configure the fishery, a default is in config/fisherycensus.R
   #fishery configuration can specify only area and time of observation
   #fishery species inherited from omlist_ss
   #this is total catch not by fleet, so only one "fishery"
-  source(userfishery, local = TRUE)
   
-  #we are not currently subsetting fishery catch because we cannot correct catch.nc
-  #  instead the catch in biomass from catch.txt is read in for the index
-  #  we do not apply any cv to this, but we could this way (default cv=0)
-  
-  fishObsCatchB <- list()
-  for(i in 1:n_reps){
-    fishObsCatchB[[i]] <- atlantisom::sample_fishery_totcatch(omlist_ss$truecatchbio_ss, fish_cv)
+  if (!is.null(userfishery)){
+    
+    source(userfishery, local = TRUE)
+    
+    #we are not currently subsetting fishery catch because we cannot correct catch.nc
+    #  instead the catch in biomass from catch.txt is read in for the index
+    #  we do not apply any cv to this, but we could this way (default cv=0)
+    
+    fishObsCatchB <- list()
+    for(i in 1:n_reps){
+      fishObsCatchB[[i]] <- atlantisom::sample_fishery_totcatch(omlist_ss$truecatchbio_ss, fish_cv)
+    }
+    
+    if(save){
+      saveRDS(fishObsCatchB, file.path(d.name, paste0(scenario.name, "_",
+                                                      fishery.name, "fishCatch.rds")))
+    }  
+  }else{
+    fishObsCatchB <- NULL
   }
   
-  if(save){
-    saveRDS(fishObsCatchB, file.path(d.name, paste0(scenario.name, "_",
-                                                    fishery.name, "fishCatch.rds")))
-  }
-  
-  indices <- list("survObsBiomB" = survObsBiomBs,
-                  "survObsNumB" = survObsNumBs,
-                  "fishObsCatchB" = fishObsCatchB)
-  
+  indices <- c(indices, list("fishObsCatchB" = fishObsCatchB))
   return(indices)
 }
