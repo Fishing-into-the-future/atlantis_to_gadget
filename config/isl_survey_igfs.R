@@ -9,7 +9,7 @@
 # Need to define survey season, area, efficiency, selectivity
 
 # Survey name
-survey.name <- "IGFS_allbox_effic1"
+survey.name <- "IGFS"
 
 # Atlantis model timestep corresponding to the true output--now from census_spec.R
 timestep <- stepperyr # 4
@@ -42,29 +42,36 @@ surveffic <- data.frame(species=survspp,
 
 # survey selectivity (agecl based)
 # this is by age class, need to change to use with ANNAGEBIO output
-#survselex <- data.frame(species=rep(names(age_classes), each=n_age_classes),
-#                     agecl=rep(c(1:n_age_classes),length(survspp)),
-#                     selex=rep(1.0,length(survspp)*n_age_classes))
+if (FALSE){
+  survselex <- data.frame(species=rep(names(age_classes), each=n_age_classes),
+                       agecl=rep(c(1:n_age_classes),length(survspp)),
+                       selex=rep(1.0,length(survspp)*n_age_classes))
+}else{
+  # for annage output uses names(annages) NOT alphabetical survspp
+  survselex <- data.frame(species=rep(names(annages), n_annages), #  
+                          agecl=unlist(sapply(n_annages,seq)),
+                          selex=c(0,0.1,0.5,0.8,1,1,1,1,1,1,1,1,1,1,1,1)) #c(rep(0, 3), rep(1.0,sum(n_annages-3))))
+  
+}
 
-# for annage output uses names(annages) NOT alphabetical survspp
-survselex <- data.frame(species=rep(names(annages), n_annages), #  
-                        agecl=unlist(sapply(n_annages,seq)),
-                        selex=c(rep(0, 3), rep(1.0,sum(n_annages-3))))
 
 survselex.agecl <- survselex
 
 
 # effective sample size needed for sample_fish
 # this effective N is high but not equal to total for numerous groups
-surveffN <- data.frame(species=survspp, effN=rep(100000, length(survspp)))
+surveffN <- data.frame(species=survspp, effN=rep(85000, length(survspp)))
 
 # survey index cv needed for sample_survey_xxx
 # cv = 0.1
-surv_cv <- data.frame(species=survspp, cv=rep(0.1,length(survspp)))
+surv_cv <- data.frame(species=survspp, cv=rep(0.2,length(survspp)))
+#surv_cv <- data.frame(species=survspp, cv=rep(0,length(survspp)))
+
+age_prop <- data.frame(species = survspp, prop = 0.05)
 
 # length at age cv for input into calc_age2length function
 # function designed to take one cv for all species, need to change to pass it a vector
-lenage_cv <- 0.1
+lenage_cv <- 0.135
 
 # max size bin for length estimation, function defaults to 150 cm if not supplied
 maxbin <- 150

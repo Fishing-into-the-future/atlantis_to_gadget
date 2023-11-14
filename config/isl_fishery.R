@@ -40,11 +40,13 @@ fishboxes <- c(0:(omlist_ss$boxpars$nbox - 1))
 # effective sample size needed for sample_fish
 # this effective N is divided by the number of annual timesteps below, so 200 per time
 # use as input to the length samples, ages can be a subset
-fisheffN <- data.frame(species=survspp, effN=rep(1000, length(survspp)))
+fisheffN <- data.frame(species=survspp, effN=rep(100000, length(survspp)))
+
+age_prop <- data.frame(species = 'Cod', prop = 0.1)
 
 #this adjusts for subannual fishery output so original effN is for whole year
 fisheffN$effN <- fisheffN$effN/fstepperyr 
 
 # fishery catch cv can be used in sample_survey_biomass
 # perfect observation
-fish_cv <- data.frame(species=survspp, cv=0.001)
+fish_cv <- data.frame(species=survspp, cv=0)

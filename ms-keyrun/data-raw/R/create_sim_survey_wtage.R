@@ -95,24 +95,27 @@ create_sim_survey_wtage <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=
   
   #multiple surveys named in list object
   for(s in names(annage_wtage)){
-    #arrange into wide format: year, Species1, Species2 ... and write csv
-    svwtage <- annage_wtage[[s]][[1]] %>%
-      dplyr::filter(time %in% fittimes) %>%
-      dplyr::mutate(year = ceiling(time/stepperyr)) %>%
-      dplyr::select(species, year, agecl, atoutput) %>%
-      dplyr::rename(Wtage = atoutput) %>%
-      dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%
-      dplyr::mutate(ModSim = modsim) %>%
-      dplyr::mutate(survey = s) %>%
-      #dplyr::left_join(svcvlook) %>%
-      dplyr::select(ModSim, year, Code, Name=species, survey, age=agecl, everything()) %>%
-      tidyr::pivot_longer(cols = c("Wtage"), 
-                          names_to = "variable",
-                          values_to = "value") %>%
-      dplyr::mutate(units = ifelse(variable=="Wtage", "g", "NA")) %>%
-      dplyr::arrange(Name, survey, variable, year, age)
-    
-    allsvwtage <- dplyr::bind_rows(allsvwtage, svwtage)
+    for (j in 1:length(annage_wtage[[s]])){
+      #arrange into wide format: year, Species1, Species2 ... and write csv
+      svwtage <- annage_wtage[[s]][[j]] %>%
+        dplyr::filter(time %in% fittimes) %>%
+        dplyr::mutate(year = ceiling(time/stepperyr)) %>%
+        dplyr::select(species, year, agecl, atoutput) %>%
+        dplyr::rename(Wtage = atoutput) %>%
+        dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%
+        dplyr::mutate(ModSim = modsim) %>%
+        dplyr::mutate(survey = s) %>%
+        #dplyr::left_join(svcvlook) %>%
+        dplyr::select(ModSim, year, Code, Name=species, survey, age=agecl, everything()) %>%
+        tidyr::pivot_longer(cols = c("Wtage"), 
+                            names_to = "variable",
+                            values_to = "value") %>%
+        dplyr::mutate(units = ifelse(variable=="Wtage", "g", "NA")) %>%
+        dplyr::arrange(Name, survey, variable, year, age) %>% 
+        dplyr::mutate(replicate = j)
+      
+      allsvwtage <- dplyr::bind_rows(allsvwtage, svwtage) 
+    }
   }
   
   simSurveyWtatAge <- allsvwtage

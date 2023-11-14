@@ -24,7 +24,7 @@ for (i in dir('ms-keyrun/data-raw/R')) source(file.path('ms-keyrun/data-raw/R', 
 fitstart <- 10
 fitend <- 73
 saveToData <- FALSE
-outputfolder <- file.path('ms-keyrun/data-raw/atlantisoutput', v.name)
+outputfolder <- file.path('ms-keyrun/data-raw/atlantisoutput', v.name, sampling_id)
 if (!dir.exists(outputfolder)) dir.create(outputfolder, recursive = TRUE)
 
 ## -----------------------------------------------------------------------------
@@ -61,6 +61,12 @@ saveRDS(simSurveyInfo, file.path(outputfolder, "simSurveyInfo.rds"))
 simSurveyIndex <- create_sim_survey_index(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
 saveRDS(simSurveyIndex, file.path(outputfolder, "simSurveyIndex.rds"))
 
+# simSurveyIndex %>% 
+#   filter(variable == 'biomass') %>% 
+#   group_by(year, replicate, survey) %>% 
+#   summarise(val = sum(value)) %>% 
+#   ggplot(aes(year, val)) + geom_line(aes(col = as.factor(replicate))) + facet_wrap(~survey)
+
 ## Length composition 
 simSurveyLencomp <- create_sim_survey_lencomp(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
 saveRDS(simSurveyLencomp, file.path(outputfolder, "simSurveyLencomp.rds"))
@@ -73,6 +79,15 @@ saveRDS(simSurveyLencomp, file.path(outputfolder, "simSurveyLencomp.rds"))
 ## ALK
 simSurveyAgeLencomp <- create_sim_survey_agelen(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
 saveRDS(simSurveyAgeLencomp, file.path(outputfolder, "simSurveyAgeLencomp.rds"))
+
+# simSurveyAgeLencomp %>% 
+#   group_by(year, survey, replicate) %>% 
+#   summarise(ml = (sum(lenbin*value)/sum(value)),
+#             ma = (sum(agecl*value)/sum(value))) -> qq# %>% 
+#   pivot_longer(cols = c(ml, ma), names_to = 'var') %>% 
+#   ggplot(aes(year, value)) + 
+#   geom_line(aes(col = as.factor(replicate))) + 
+#   facet_wrap(~survey + var, scales = "free_y")
 
 ## Weight at age
 simSurveyWtatAge <- create_sim_survey_wtage(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)

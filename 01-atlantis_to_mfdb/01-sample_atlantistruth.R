@@ -18,11 +18,16 @@ source('src/load_nc_cohort.R')
 #source('src/load_nc_local.R')
 source('src/load_biolprm_local.R')
 source('src/om_list_isl.R')
+source('src/sample_survey_biomass_box.R')
+source('src/sample_survey_numbers_box.R')
 
 
 ## Some variables
 atlantis_dir <- '../../Atlantis/AtlantisIceland/v6610'
 base_dir <- '01-atlantis_to_mfdb'
+
+nreps <- 100
+sampling_id <- paste0('effic1_cv02_rep', nreps)
 
 species_ss <- 'Cod'
 
@@ -55,13 +60,13 @@ print(names(iceom_ms))
 iceom_ms_ind <- om_index_isl(usersurvey = c("config/isl_survey_igfs.R", "config/isl_survey_aut.R"),
                              userfishery = c("config/isl_fishery.R"),
                              omlist_ss = iceom_ms, 
-                             n_reps = 1, 
+                             n_reps = nreps, 
                              save = TRUE)
 
 iceom_ms_comp <- om_comps(usersurvey = c("config/isl_survey_igfs.R", "config/isl_survey_aut.R"),
                           userfishery = c("config/isl_fishery.R"),
                           omlist_ss = iceom_ms, 
-                          n_reps = 1, 
+                          n_reps = nreps, 
                           save = TRUE)
 
 # NOBAom_ms_diet <- om_diet(config = here("simulated-data/config", "NOBA2config.R"),

@@ -76,26 +76,29 @@ create_sim_survey_agelen <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData
   
   #multiple surveys named in list object
   for(s in names(len_comp_data)){
-    #arrange into wide format: year, Species1, Species2 ... and write csv
-    svagelenbin <- len_comp_data[[s]][[1]] %>%
-      dplyr::filter(time %in% fittimes) %>%
-      dplyr::mutate(year = ceiling(time/stepperyr)) %>%
-      dplyr::select(species, agecl, year, lower.bins, atoutput) %>%
-      dplyr::group_by(species, agecl, year, lower.bins) %>%
-      dplyr::summarise(Natlen = sum(atoutput)) %>%
-      dplyr::ungroup() %>%
-      dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%
-      dplyr::mutate(ModSim = modsim) %>%
-      dplyr::mutate(survey = s) %>%
-      #dplyr::left_join(svcvlook) %>%
-      dplyr::select(ModSim, year, Code, Name=species, survey, agecl, lenbin=lower.bins, everything()) %>%
-      tidyr::pivot_longer(cols = c("Natlen"),
-                          names_to = "variable",
-                          values_to = "value") %>%
-      dplyr::mutate(units = ifelse(variable=="Natlen", "number", "NA")) %>%
-      dplyr::arrange(Name, survey, variable, year, agecl, lenbin)
-
-    allsvagelenbin <- dplyr::bind_rows(allsvagelenbin, svagelenbin)
+    for (j in 1:length(len_comp_data[[s]])){
+      #arrange into wide format: year, Species1, Species2 ... and write csv
+      svagelenbin <- len_comp_data[[s]][[j]] %>%
+        dplyr::filter(time %in% fittimes) %>%
+        dplyr::mutate(year = ceiling(time/stepperyr)) %>%
+        dplyr::select(species, agecl, year, lower.bins, atoutput) %>%
+        dplyr::group_by(species, agecl, year, lower.bins) %>%
+        dplyr::summarise(Natlen = sum(atoutput)) %>%
+        dplyr::ungroup() %>%
+        dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%
+        dplyr::mutate(ModSim = modsim) %>%
+        dplyr::mutate(survey = s) %>%
+        #dplyr::left_join(svcvlook) %>%
+        dplyr::select(ModSim, year, Code, Name=species, survey, agecl, lenbin=lower.bins, everything()) %>%
+        tidyr::pivot_longer(cols = c("Natlen"),
+                            names_to = "variable",
+                            values_to = "value") %>%
+        dplyr::mutate(units = ifelse(variable=="Natlen", "number", "NA")) %>%
+        dplyr::arrange(Name, survey, variable, year, agecl, lenbin) %>% 
+        dplyr::mutate(replicate = j)
+      
+      allsvagelenbin <- dplyr::bind_rows(allsvagelenbin, svagelenbin) 
+    }
   }
   
   simSurveyAgeLencomp <-allsvagelenbin

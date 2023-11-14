@@ -81,10 +81,14 @@ om_index_isl <- function(usersurvey = usersurvey_file,
     
     survObsBiomB <- list()
     survObsNumB <- list()
+    
     for(i in 1:n_reps){
-      survObsBiomB[[i]] <- atlantisom::sample_survey_biomass(survey_B, surv_cv, wtage)
-      survObsNumB[[i]] <- atlantisom::sample_survey_numbers(survey_N, surv_cv)
+      survObsBiomB[[i]] <- sample_survey_biomass_box(survey_B, surv_cv, wtage)
+      survObsNumB[[i]] <- sample_survey_numbers_box(survey_N, surv_cv)
     }
+    
+    #testB <- atlantisom::sample_survey_biomass(survey_B, surv_cv, wtage)
+    #testN <- atlantisom::sample_survey_numbers(survey_N, surv_cv)
     
     #save survey indices, takes a long time to generate with lots of reps/species
     if(save){

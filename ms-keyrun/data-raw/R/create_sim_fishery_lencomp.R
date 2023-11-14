@@ -77,26 +77,29 @@ create_sim_fishery_lencomp <- function(atlmod,fitstart=NULL,fitend=NULL,saveToDa
   
   #multiple surveys named in list object
   for(f in names(catchlen_ss)){
-    #arrange into wide format: year, Species1, Species2 ... and write csv
-    fishlenbin <- catchlen_ss[[f]][[1]] %>%
-      dplyr::filter(time %in% fittimes) %>%
-      dplyr::mutate(year = ceiling(time/stepperyr)) %>%
-      dplyr::select(species, year, lower.bins, atoutput) %>%
-      dplyr::group_by(species, year, lower.bins) %>%
-      dplyr::summarise(Natlen = sum(atoutput)) %>%
-      dplyr::ungroup() %>%
-      dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%
-      dplyr::mutate(ModSim = modsim) %>%
-      dplyr::mutate(fishery = f) %>%
-      #dplyr::left_join(fvcvlook) %>%
-      dplyr::select(ModSim, year, Code, Name=species, fishery, lenbin=lower.bins, everything()) %>%
-      tidyr::pivot_longer(cols = c("Natlen"), 
-                          names_to = "variable",
-                          values_to = "value") %>%
-      dplyr::mutate(units = ifelse(variable=="Natlen", "number", "NA")) %>%
-      dplyr::arrange(Name, fishery, variable, year, lenbin)
-    
-    allfishlenbin <- dplyr::bind_rows(allfishlenbin, fishlenbin)
+    for (j in 1:length(catchlen_ss[[f]])){
+      #arrange into wide format: year, Species1, Species2 ... and write csv
+      fishlenbin <- catchlen_ss[[f]][[j]] %>%
+        dplyr::filter(time %in% fittimes) %>%
+        dplyr::mutate(year = ceiling(time/stepperyr)) %>%
+        dplyr::select(species, year, lower.bins, atoutput) %>%
+        dplyr::group_by(species, year, lower.bins) %>%
+        dplyr::summarise(Natlen = sum(atoutput)) %>%
+        dplyr::ungroup() %>%
+        dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%
+        dplyr::mutate(ModSim = modsim) %>%
+        dplyr::mutate(fishery = f) %>%
+        #dplyr::left_join(fvcvlook) %>%
+        dplyr::select(ModSim, year, Code, Name=species, fishery, lenbin=lower.bins, everything()) %>%
+        tidyr::pivot_longer(cols = c("Natlen"), 
+                            names_to = "variable",
+                            values_to = "value") %>%
+        dplyr::mutate(units = ifelse(variable=="Natlen", "number", "NA")) %>%
+        dplyr::arrange(Name, fishery, variable, year, lenbin) %>% 
+        mutate(replicate = j)
+      
+      allfishlenbin <- dplyr::bind_rows(allfishlenbin, fishlenbin) 
+    }
   }
   
   simFisheryLencomp <- allfishlenbin

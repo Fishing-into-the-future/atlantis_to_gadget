@@ -26,10 +26,10 @@
 library(magrittr)
 
 create_sim_fishery_index <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=T) {
-
+  
   # input is path to model config file for atlantisom
   source(atlmod)
-  
+  #browser()
   # path for survey and fishery config files
   cfgpath <- stringr::str_extract(atlmod, ".*config")
   
@@ -38,7 +38,7 @@ create_sim_fishery_index <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData
   modsim <- modpath[length(modpath)]
   
   #read in survey biomass data
-  catchbio_ss <- atlantisom::read_savedfisheries(file.path(d.name, v.name), 'Catch')
+  catchbio_ss <- atlantisom::read_savedfisheries(d.name, 'Catch')
   
   # get config files for fishery cv
   fishcon <- list.files(path=cfgpath, pattern = "*fishery*", full.names = TRUE)
@@ -84,7 +84,7 @@ create_sim_fishery_index <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData
   }
   
   allcatch <- tibble::tibble()
-  browser()
+  
   # limit catchbio_ss to names in fcvlook
   # WARNING this is now written only for output with Code and timestep output
   for(f in names(catchbio_ss)[names(catchbio_ss) %in% fcvlook$fishery]){
@@ -112,7 +112,7 @@ create_sim_fishery_index <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData
     allcatch <- dplyr::bind_rows(allcatch, catchbio)  
   }
   
-
+  
   simCatchIndexSubannual <- allcatch
   
   #build new annual index from this one
@@ -123,7 +123,7 @@ create_sim_fishery_index <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData
     dplyr::relocate(units, .after = last_col()) %>%
     dplyr::arrange(Name, fishery, variable, year)  
   
-  browser()
+  
   
   if (saveToData) {
     usethis::use_data(simCatchIndexSubannual, overwrite = TRUE)

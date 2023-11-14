@@ -96,26 +96,29 @@ create_sim_fishery_wtage <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData
   
   #multiple surveys named in list object
   for(f in names(fish_annage_wtage)){
-    #arrange into wide format: year, Species1, Species2 ... and write csv
-    fishwtage <- fish_annage_wtage[[f]][[1]] %>%
-      dplyr::filter(time %in% fittimes) %>%
-      dplyr::mutate(year = ceiling(time/stepperyr)) %>%
-      dplyr::select(species, year, agecl, atoutput) %>%
-      dplyr::group_by(species, year, agecl) %>%
-      dplyr::summarise(Wtage = mean(atoutput, na.rm=T)) %>%
-      dplyr::ungroup() %>%
-      dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%
-      dplyr::mutate(ModSim = modsim) %>%
-      dplyr::mutate(fishery = f) %>%
-      #dplyr::left_join(svcvlook) %>%
-      dplyr::select(ModSim, year, Code, Name=species, fishery, age=agecl, everything()) %>%
-      tidyr::pivot_longer(cols = c("Wtage"), 
-                          names_to = "variable",
-                          values_to = "value") %>%
-      dplyr::mutate(units = ifelse(variable=="Wtage", "g", "NA")) %>%
-      dplyr::arrange(Name, fishery, variable, year, age)
-    
-    allfishwtage <- dplyr::bind_rows(allfishwtage, fishwtage)
+    for (j in 1:length(fish_annage_wtage[[f]])){
+      #arrange into wide format: year, Species1, Species2 ... and write csv
+      fishwtage <- fish_annage_wtage[[f]][[j]] %>%
+        dplyr::filter(time %in% fittimes) %>%
+        dplyr::mutate(year = ceiling(time/stepperyr)) %>%
+        dplyr::select(species, year, agecl, atoutput) %>%
+        dplyr::group_by(species, year, agecl) %>%
+        dplyr::summarise(Wtage = mean(atoutput, na.rm=T)) %>%
+        dplyr::ungroup() %>%
+        dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%
+        dplyr::mutate(ModSim = modsim) %>%
+        dplyr::mutate(fishery = f) %>%
+        #dplyr::left_join(svcvlook) %>%
+        dplyr::select(ModSim, year, Code, Name=species, fishery, age=agecl, everything()) %>%
+        tidyr::pivot_longer(cols = c("Wtage"), 
+                            names_to = "variable",
+                            values_to = "value") %>%
+        dplyr::mutate(units = ifelse(variable=="Wtage", "g", "NA")) %>%
+        dplyr::arrange(Name, fishery, variable, year, age) %>% 
+        dplyr::mutate(replicate = j)
+      
+      allfishwtage <- dplyr::bind_rows(allfishwtage, fishwtage) 
+    }
   }
   
   simFisheryWtatAge <- allfishwtage

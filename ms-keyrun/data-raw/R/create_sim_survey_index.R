@@ -74,24 +74,28 @@ create_sim_survey_index <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=
   
   #multiple surveys named in list object
   for(s in names(survObsBiom)){
-    #arrange into wide format: year, Species1, Species2 ... and write csv
-    svbio <- survObsBiom[[s]][[1]] %>%
-      dplyr::filter(time %in% fittimes) %>%
-      dplyr::mutate(year = ceiling(time/stepperyr)) %>%
-      dplyr::select(species, year, atoutput) %>%
-      dplyr::rename(biomass = atoutput) %>%
-      dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%
-      dplyr::mutate(ModSim = modsim) %>%
-      dplyr::mutate(survey = s) %>%
-      dplyr::left_join(svcvlook) %>%
-      dplyr::select(ModSim, year, Code, Name=species, survey, everything()) %>%
-      tidyr::pivot_longer(cols = c("biomass", "cv"), 
-                          names_to = "variable",
-                          values_to = "value") %>%
-      dplyr::mutate(units = ifelse(variable=="biomass", "tons", "unitless")) %>%
-      dplyr::arrange(Name, survey, variable, year)
-    
-    allsvbio <- dplyr::bind_rows(allsvbio, svbio)
+    for (j in 1:length(survObsBiom[[s]])){
+      
+      #arrange into wide format: year, Species1, Species2 ... and write csv
+      svbio <- survObsBiom[[s]][[j]] %>%
+        dplyr::filter(time %in% fittimes) %>%
+        dplyr::mutate(year = ceiling(time/stepperyr)) %>%
+        dplyr::select(species, year, polygon, atoutput) %>%
+        dplyr::rename(biomass = atoutput) %>%
+        dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%
+        dplyr::mutate(ModSim = modsim) %>%
+        dplyr::mutate(survey = s) %>%
+        dplyr::left_join(svcvlook) %>%
+        dplyr::select(ModSim, year, Code, Name=species, survey, everything()) %>%
+        tidyr::pivot_longer(cols = c("biomass", "cv"), 
+                            names_to = "variable",
+                            values_to = "value") %>%
+        dplyr::mutate(units = ifelse(variable=="biomass", "tons", "unitless")) %>%
+        dplyr::arrange(Name, survey, variable, year) %>% 
+        dplyr::mutate(replicate = j)
+      
+      allsvbio <- dplyr::bind_rows(allsvbio, svbio) 
+    }
   }
   
   simSurveyIndex <- allsvbio

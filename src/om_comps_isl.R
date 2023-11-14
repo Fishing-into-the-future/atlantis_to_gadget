@@ -54,6 +54,7 @@ om_comps <- function(usersurvey = usersurvey_file,
   age_comp_datas <- list()
   survObsLenComps <- list()
   survObsWtAtAges <- list()
+  survObsLenCompsSubset <- list()
   
   for (s in usersurvey)
   {
@@ -71,14 +72,24 @@ om_comps <- function(usersurvey = usersurvey_file,
     #Sample fish for age composition
     # if we want replicates for obs error this sample function will generate them
     age_comp_data <- list()
+    age_comp_data_subset <- list()
     for(i in 1:n_reps){
       age_comp_data[[i]] <- atlantisom::sample_fish(survey_N, surveffN)
+      age_comp_data_subset[[i]] <- 
+        sample_ages(age_comp_data[[i]], age_prop) %>% 
+        rename(agecl = age, atoutput = numAtAgeSamp) %>% 
+        mutate(polygon = NA, layer = NA) %>% 
+        select(species, agecl, polygon, layer, time, atoutput)
     }
+    
+    
     
     # save age comps
     if(save){
       saveRDS(age_comp_data, file.path(d.name, paste0(scenario.name, "_",
                                                       survey.name, "survObsAgeComp.rds")))
+      saveRDS(age_comp_data_subset, file.path(d.name, paste0(scenario.name, "_",
+                                                      survey.name, "survObsAgeCompSubset.rds")))
     }
     
     #weights needed for weight at age and length comp calcs
@@ -102,7 +113,9 @@ om_comps <- function(usersurvey = usersurvey_file,
     #this is all input into the length function, replicates follow age comp reps
     #  separating the length comps from the weight at age here
     survey_lenwt <- list()
+    survey_lenwt_subset <- list()
     survObsLenComp <- list()
+    survObsLenCompSubset <- list()
     survObsWtAtAge <- list()
     
     for(i in 1:n_reps){
@@ -117,6 +130,18 @@ om_comps <- function(usersurvey = usersurvey_file,
       
       survObsLenComp[[i]] <- survey_lenwt[[i]]$natlength
       survObsWtAtAge[[i]] <- survey_lenwt[[i]]$muweight
+      
+      ## Subset
+      survey_lenwt_subset[[i]] <- atlantisom::calc_age2length(structn = structnss,
+                                                              resn = resnss,
+                                                              nums = age_comp_data_subset[[i]],
+                                                              biolprm = omlist_ss$biol,
+                                                              fgs = omlist_ss$funct.group_ss,
+                                                              maxbin = maxbin,
+                                                              CVlenage = lenage_cv,
+                                                              remove.zeroes=TRUE)
+      
+      survObsLenCompSubset[[i]] <- survey_lenwt_subset[[i]]$natlength
     }
     
     if(save){
@@ -124,11 +149,14 @@ om_comps <- function(usersurvey = usersurvey_file,
                                                        survey.name, "survObsLenComp.rds")))
       saveRDS(survObsWtAtAge, file.path(d.name, paste0(scenario.name, "_",
                                                        survey.name, "survObsWtAtAge.rds")))
+      saveRDS(survObsLenCompSubset, file.path(d.name, paste0(scenario.name, "_",
+                                                       survey.name, "survObsLenCompSubset.rds")))
     }
     # add each survey to master list objects for survey data
     age_comp_datas[[survey.name]] <- age_comp_data
     survObsLenComps[[survey.name]] <- survObsLenComp
     survObsWtAtAges[[survey.name]] <- survObsWtAtAge
+    survObsLenCompsSubset[[survey.name]] <- survObsLenCompSubset
     
   }
   
@@ -146,14 +174,22 @@ om_comps <- function(usersurvey = usersurvey_file,
   
   # if we want replicates for obs error this sample function will generate them
   catch_age_comp <- list()
+  catch_age_comp_subset <- list()
   for(i in 1:n_reps){
     catch_age_comp[[i]] <- atlantisom::sample_fish(catch_numbers, fisheffN)
+    catch_age_comp_subset[[i]] <- 
+      sample_ages(catch_age_comp[[i]], age_prop) %>% 
+      rename(agecl = age, atoutput = numAtAgeSamp) %>% 
+      mutate(polygon = NA, layer = NA) %>% 
+      select(species, agecl, polygon, layer, time, atoutput)
   }
   
   # save fishery age comps
   if(save){
     saveRDS(catch_age_comp, file.path(d.name, paste0(scenario.name, "_",
                                                      fishery.name, "fishObsAgeComp.rds")))
+    saveRDS(catch_age_comp_subset, file.path(d.name, paste0(scenario.name, "_",
+                                                     fishery.name, "fishObsAgeCompSubset.rds")))
   }
   
   #Get catch weights for length comp calc
@@ -178,8 +214,10 @@ om_comps <- function(usersurvey = usersurvey_file,
   #same structure as above for surveys, replicates follow age comp reps
   #  separating the length comps from the weight at age here
   fishery_lenwt <- list()
+  fishery_lenwt_subset <- list()
   fishObsLenComp <- list()
   fishObsWtAtAge <- list()
+  fishObsLenCompSubset <- list()
   
   for(i in 1:n_reps){
     fishery_lenwt[[i]] <- atlantisom::calc_age2length(structn = catch_structnss,
@@ -193,6 +231,17 @@ om_comps <- function(usersurvey = usersurvey_file,
     
     fishObsLenComp[[i]] <- fishery_lenwt[[i]]$natlength
     fishObsWtAtAge[[i]] <- fishery_lenwt[[i]]$muweight
+    
+    fishery_lenwt_subset[[i]] <- atlantisom::calc_age2length(structn = catch_structnss,
+                                                      resn = catch_resnss,
+                                                      nums = catch_age_comp_subset[[i]],
+                                                      biolprm = omlist_ss$biol,
+                                                      fgs = omlist_ss$funct.group_ss,
+                                                      maxbin = maxbin,
+                                                      CVlenage = lenage_cv,
+                                                      remove.zeroes=TRUE)
+    
+    fishObsLenCompSubset[[i]] <- fishery_lenwt_subset[[i]]$natlength
   }
   
   if(save){
@@ -200,6 +249,8 @@ om_comps <- function(usersurvey = usersurvey_file,
                                                      fishery.name, "fishObsLenComp.rds")))
     saveRDS(fishObsWtAtAge, file.path(d.name, paste0(scenario.name, "_",
                                                      fishery.name, "fishObsWtAtAge.rds")))
+    saveRDS(fishObsLenCompSubset, file.path(d.name, paste0(scenario.name, "_",
+                                                     fishery.name, "fishObsLenCompSubset.rds")))
   }
   
   if(!is.null(omlist_ss$truenumsage_ss)){
@@ -299,9 +350,11 @@ om_comps <- function(usersurvey = usersurvey_file,
   
   comps <- list("survObsAgeComp" = age_comp_datas,
                 "survObsLenComp" = survObsLenComps,
+                "survObsLenCompSubset" = survObsLenCompsSubset,
                 "survObsWtAtAge" = survObsWtAtAges,
                 "fishObsAgeComp" = catch_age_comp,
                 "fishObsLenComp" = fishObsLenComp,
+                "fishObsLenCompSubset" = fishObsLenCompSubset,
                 "fishObsWtAtAge" = fishObsWtAtAge,
                 "survObsFullAgeComp" = annage_comp_datas,
                 "fishObsFullAgeComp" = catch_annage_comp,
