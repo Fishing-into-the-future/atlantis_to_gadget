@@ -68,19 +68,24 @@ calc_age2length_isl <- function(structn, resn, nums,
   }
   
   tmp <- lapply(split(nums, 1:nrow(nums)), function(x, maxbin, CVlenage){
-    
+   
     group <- x$species
     group <- factor(group, levels=levels(groups))
     igroup <- which(groups==group)
     box <- x$polygon
-    layer <- x$nums$layer
-    time <- x$nums$time
-    age <- x$nums$agecl
+    layer <- x$layer
+    time <- x$time
+    age <- x$agecl
+    if ('agecl' %in% names(CVlenage)){
+      cv <- CVlenage[CVlenage$species == group & CVlenage$agecl == age, 'cvlenage']  
+    }else{
+      cv <- CVlenage[CVlenage$species == group, 'cvlenage']  
+    }
     
     upper.bins <- 1:maxbin$maxlenbin[which(maxbin$species==group)]
     lower.bins <- c(0,upper.bins[-length(upper.bins)])
     
-    sigma <- sqrt(log((CVlenage$cvlenage[which(CVlenage$species==group)]^2)+1))
+    sigma <- sqrt(log((cv^2)+1))
     muuse <- log(x$mulen) - 0.5*(sigma^2)
     CumFracperbin <- plnorm(upper.bins,muuse,sigma)
     Fracperbin <- c(CumFracperbin[1],diff(CumFracperbin))

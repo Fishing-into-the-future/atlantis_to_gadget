@@ -12,16 +12,30 @@
 #'\item{Code}{Atlantis model three letter code for functional group}
 #'\item{Name}{Atlantis model common name for functional group}
 #'\item{survey}{simulated survey name}
-#'\item{lenbin}{1 cm length bin, lower limit}
-#'\item{variable}{number at length (Natlen)}
+#'\item{variable}{biomass or coefficient of variation (cv) of biomass}
 #'\item{value}{value of the variable}
 #'\item{units}{units of the variable}
 #'
 
 library(magrittr)
 
-create_sim_survey_lencomp <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=T) {
+create_sim_survey_index_numbers <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=T) {
 
+  read_savednumsurvs <- function (dir, type) 
+  {
+    datlook <- data.frame(dattype = c("survN"), 
+                          pattern = c("*surveyN.rds"))
+    survs <- list.files(path = dir, pattern = as.character(datlook$pattern[datlook$dattype %in% 
+                                                                             type]), full.names = TRUE)
+    survey.name <- stringr::str_match(survs, paste0(scenario.name, 
+                                                    "_\\s*(.*?)\\s", datlook$pattern[datlook$dattype == type]))[, 
+                                                                                                                2]
+    dat <- lapply(survs, readRDS)
+    names(dat) <- survey.name
+    return(dat)
+  }
+  
+  
   # input is path to model config file for atlantisom
   source(atlmod)
   
@@ -32,10 +46,10 @@ create_sim_survey_lencomp <- function(atlmod,fitstart=NULL,fitend=NULL,saveToDat
   modpath <- stringr::str_split(d.name, "/", simplify = TRUE)
   modsim <- modpath[length(modpath)]
   
-  #read in survey annual age comp data
-  len_comp_data <- atlantisom::read_savedsurvs(file.path(d.name, v.name), 'survLen')
+  #read in survey biomass data
+  survObsNum <- read_savednumsurvs(file.path(d.name, v.name), 'survN') #reads in all surveys
   
-  # get config files -- needed?
+  # get config files for survey cv
   svcon <- list.files(path=cfgpath, pattern = "*survey*", full.names = TRUE)
   
   # read true list with run and biol pars, etc
@@ -62,54 +76,51 @@ create_sim_survey_lencomp <- function(atlmod,fitstart=NULL,fitend=NULL,saveToDat
   #fittimes.days <- if(omlist_ss$runpar$outputstepunit=="days") fittimes*omlist_ss$runpar$outputstep
   
   
-  # # survey cv lookup from config files
-  # svcvlook <- tibble::tibble()
-  # for(c in 1:length(svcon)){
-  #   source(svcon[c], local = TRUE)
-  #   surv_cv_n <- surv_cv %>% 
-  #     dplyr::mutate(survey=survey.name)
-  #   svcvlook <- dplyr::bind_rows(svcvlook, surv_cv_n)
-  # }
+  # survey cv lookup from config files
+  svcvlook <- tibble::tibble()
+  for(c in 1:length(svcon)){
+    source(svcon[c], local = TRUE)
+    surv_cv_n <- surv_cv %>% 
+      dplyr::mutate(survey=survey.name)
+    svcvlook <- dplyr::bind_rows(svcvlook, surv_cv_n)
+  }
   
-  allsvlenbin <- tibble::tibble()
+  allsvbio <- tibble::tibble()
   
   #multiple surveys named in list object
-  for(s in names(len_comp_data)){
-    for (j in 1:length(len_comp_data[[s]])){
+  for(s in names(survObsNum)){
+    for (j in 1:length(survObsNum[[s]])){
       
       #arrange into wide format: year, Species1, Species2 ... and write csv
-      svlenbin <- len_comp_data[[s]][[j]] %>%
+      svbio <- survObsNum[[s]][[j]] %>%
         dplyr::filter(time %in% fittimes) %>%
         dplyr::mutate(year = ceiling(time*omlist_ss$runpar$outputstep/365)) %>%
-        dplyr::select(species, year, lower.bins, atoutput) %>%
-        dplyr::group_by(species, year, lower.bins) %>%
-        dplyr::summarise(Natlen = sum(atoutput)) %>%
-        dplyr::ungroup() %>%
+        dplyr::select(species, year, polygon, lower.bins, upper.bins, atoutput) %>%
+        dplyr::rename(numbers = atoutput) %>%
         dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%
         dplyr::mutate(ModSim = modsim) %>%
         dplyr::mutate(survey = s) %>%
-        #dplyr::left_join(svcvlook) %>%
-        dplyr::select(ModSim, year, Code, Name=species, survey, lenbin=lower.bins, everything()) %>%
-        tidyr::pivot_longer(cols = c("Natlen"), 
+        dplyr::left_join(svcvlook) %>%
+        dplyr::select(ModSim, year, Code, Name=species, survey, everything()) %>%
+        tidyr::pivot_longer(cols = c("numbers", "cv"), 
                             names_to = "variable",
                             values_to = "value") %>%
-        dplyr::mutate(units = ifelse(variable=="Natlen", "number", "NA")) %>%
-        dplyr::arrange(Name, survey, variable, year, lenbin) %>% 
-        mutate(replicate = j)
+        dplyr::mutate(units = ifelse(variable=="numbers", "numbers", "unitless")) %>%
+        dplyr::arrange(Name, survey, variable, year) %>% 
+        dplyr::mutate(replicate = j)
       
-      allsvlenbin <- dplyr::bind_rows(allsvlenbin, svlenbin)  
+      allsvbio <- dplyr::bind_rows(allsvbio, svbio) 
     }
-    
   }
   
-  simSurveyLencomp <- allsvlenbin
+  simSurveyIndex <- allsvbio
   
   if (saveToData) {
-  
-    usethis::use_data(simSurveyLencomp, overwrite = TRUE)
+    #saveRDS(focalSpecies,saveToRDS)
+    usethis::use_data(simSurveyIndex, overwrite = TRUE)
   }
   
-  return(simSurveyLencomp)
+  return(simSurveyIndex)
   
   
 }

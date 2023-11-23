@@ -44,12 +44,22 @@
 
 library(mfdb)
 library(mfdbatlantis)
+library(tidyverse)
 
+
+sampling_id <- 'v3_effic1_cv00_rep1'
+for (i in dir(file.path('ms-keyrun/data-raw/atlantisoutput/Out', sampling_id))){
+  if (grepl('rds', i)){
+    assign(gsub('\\.rds', '', i), readRDS(file.path('ms-keyrun/data-raw/atlantisoutput/Out', sampling_id, i)))
+  }
+}
+load(file = file.path('ms-keyrun/data-raw/atlantisoutput/Out', sampling_id, 'iceom.Rdata'))
 
 if (FALSE){
-  mfdb(file.path('db', 'atlantisiceland_baseline.duckdb'), destroy_schema = TRUE)
+  mfdb(file.path('db', 'atlantisiceland_baseline_v3.duckdb'), destroy_schema = TRUE)
 }
-mdb <- mfdb(file.path('db', 'atlantisiceland_baseline.duckdb'))
+mdb <- mfdb(file.path('db', 'atlantisiceland_baseline_v3.duckdb'))
+
 
 ## -----------------------------------------------------------------------------
 ## Species lookup
@@ -83,8 +93,8 @@ mfdb_import_area(mdb, area_data)
 ## -----------------------------------------------------------------------------
 
 ## atlantisom option?
-is_temp <- atlantis_temperature(is_dir, area_data)
-mfdb_import_temperature(mdb, is_temp[is_temp$depth == 1,])
+#is_temp <- atlantis_temperature(is_dir, area_data)
+#mfdb_import_temperature(mdb, is_temp[is_temp$depth == 1,])
 
 ## Time to year month lookup - quick hack for now
 # noutsteps <- floor(iceom$runpar$tstop/iceom$runpar$outputstep)
@@ -173,7 +183,7 @@ mfdb_import_tow_taxonomy(mdb, data.frame(
 tmp <- 
   fisherydata %>% 
   right_join(sppList) %>% 
-  select(year = time, fishMonth, area, fisheryCode, tow, species = mfdbSpp, weight_total)
+  select(year, fishMonth, area, fisheryCode, tow, species = mfdbSpp, weight_total)
 
 mfdb_import_survey(mdb,
                    data.frame(year = tmp$year,
@@ -192,8 +202,9 @@ mfdb_import_survey(mdb,
 ## Survey data
 ## -----------------------------------------------------------------------------
 
+cat('IMPORTING SURVEY INDICES BIOMASS\n\n')
 for (i in unique(simSurveyIndex$replicate)){
-  
+  print(i)
   si <- 
     simSurveyIndex %>%
     filter(replicate == i) %>% 
@@ -204,7 +215,9 @@ for (i in unique(simSurveyIndex$replicate)){
     left_join(simSurveyInfo %>%
                 select(survey,survMonth) %>%
                 unique()) %>%
-    mutate(area = NA)
+    mutate(area = NA) %>% 
+    rename(simyear = year) %>% 
+    left_join(iceom$time_lookup %>% select(simyear, year) %>% distinct(), by = 'simyear')
   
   mfdb::mfdb_import_survey(
     mdb,
@@ -218,7 +231,40 @@ for (i in unique(simSurveyIndex$replicate)){
                stringsAsFactors = TRUE),
     data_source = paste0('atlantis_survey_biomass_rep', i)
   )
+}
+
+cat('IMPORTING SURVEY INDICES NUMBERs\n\n')
+for (i in unique(simSurveyIndexNums$replicate)){
+  print(i)
+  si <- 
+    simSurveyIndexNums %>%
+    filter(replicate == i) %>% 
+    mutate(units=NULL) %>% 
+    left_join(sppList) %>%
+    spread(variable,value) %>%
+    left_join(simSurveyInfo %>%
+                select(survey,survMonth) %>%
+                unique()) %>%
+    mutate(area = NA) %>% 
+    rename(simyear = year) %>% 
+    left_join(iceom$time_lookup %>% select(simyear, year) %>% distinct(), by = 'simyear')
   
+  mfdb::mfdb_import_survey(
+    mdb,
+    data.frame(year = si$year,
+               month = si$survMonth,
+               areacell = paste0('Box', si$polygon),
+               species = si$mfdbSpp,
+               sampling_type = si$survey,
+               length = (si$lower.bins + si$upper.bins)/2,
+               length_var = si$cv,
+               count = si$numbers,
+               stringsAsFactors = TRUE),
+    data_source = paste0('atlantis_survey_numbers_rep', i)
+  )
+}
+
+
   
   # ## Numbers
   # tmp <- 
@@ -238,6 +284,9 @@ for (i in unique(simSurveyIndex$replicate)){
   ## Length distributions
   ## -----------------------------------------------------------------------------
   
+cat('IMPORTING LENGTH DISTRIBUTIONS\n\n')
+for (i in unique(simSurveyIndex$replicate)){
+  print(i)
   ldists <- 
     simSurveyLencomp %>%
     filter(replicate == i) %>% 
@@ -249,10 +298,13 @@ for (i in unique(simSurveyIndex$replicate)){
     rename(month = survMonth, fishery = survey) %>%
     bind_rows(
       simFisheryLencompSubannual %>% 
+        filter(replicate == i) %>% 
         left_join(sppList) %>% 
         rename(month = fishMonth)
     ) %>% 
-    mutate(area = NA) 
+    mutate(area = NA) %>% 
+    rename(simyear = year) %>% 
+    left_join(iceom$time_lookup %>% select(simyear, year) %>% distinct(), by = 'simyear')
   
   
   mfdb_import_survey(mdb, 
@@ -268,12 +320,15 @@ for (i in unique(simSurveyIndex$replicate)){
                      ),
                      data_source = paste0('atlantis_survey_ldists_rep', i)
   )
+}
   
   ## -----------------------------------------------------------------------------
   ## Age-length distributions
   ## -----------------------------------------------------------------------------
   
-  
+cat('IMPORTING AGE LENGTH DISTRIBUTIONS\n\n')
+for (i in unique(simSurveyIndex$replicate)){
+  print(i)
   aldists <- 
     simSurveyAgeLencomp %>%
     filter(replicate == i) %>% 
@@ -287,11 +342,14 @@ for (i in unique(simSurveyIndex$replicate)){
     rename(month = survMonth, fishery = survey) %>%
     bind_rows(
       simFisheryAgeLencompSubannual %>%
+        filter(replicate == i) %>% 
         left_join(sppList %>% select(ModSim,Code,mfdbSpp,SpawnMonth,RecruitMonth)) %>%
         mutate(ageCal = ifelse(RecruitMonth <= 12 & fishMonth >= RecruitMonth, agecl-1, agecl)) %>% 
         rename(month = fishMonth)
     ) %>%
-    mutate(area = NA) 
+    mutate(area = NA) %>% 
+    rename(simyear = year) %>% 
+    left_join(iceom$time_lookup %>% select(simyear, year) %>% distinct(), by = 'simyear')
   
   
   mfdb_import_survey(mdb, 
@@ -301,19 +359,23 @@ for (i in unique(simSurveyIndex$replicate)){
                        areacell = aldists$area,
                        species = aldists$mfdbSpp,
                        sampling_type = aldists$fishery,
-                       age = aldists$ageCal,
+                       #age = aldists$ageCal,
+                       age = aldists$agecl,
                        length = aldists$lenbin,
                        count = aldists$value,
                        stringsAsFactors = TRUE
                      ),
                      data_source = paste0('atlantis_survey_aldists_rep', i)
   )
-  
+}
   
   
   ## --------------------------------------------------
   ## Weight at age
   ## --------------------------------------------------
+ 
+cat('IMPORTING WEIGHT AT AGE\n\n')
+for (i in unique(simSurveyIndex$replicate)){
   
   wgtage <- 
     simSurveyWtatAge %>% 
@@ -328,12 +390,15 @@ for (i in unique(simSurveyIndex$replicate)){
     rename(month = survMonth, fishery = survey) %>%
     bind_rows(
       simFisheryWtatAgeSubannual %>% 
+        filter(replicate == i) %>% 
         left_join(sppList %>% select(ModSim,Code,mfdbSpp,SpawnMonth,RecruitMonth)) %>%
         # add age calendar (birthday 1 Jan)
         mutate(ageCal = ifelse(RecruitMonth <= 12 & fishMonth >= RecruitMonth, age-1, age)) %>% 
         rename(month = fishMonth)
     ) %>%
-    mutate(area = NA) 
+    mutate(area = NA) %>% 
+    rename(simyear = year) %>% 
+    left_join(iceom$time_lookup %>% select(simyear, year) %>% distinct(), by = 'simyear')
   
   
   mfdb_import_survey(mdb, 
@@ -343,14 +408,14 @@ for (i in unique(simSurveyIndex$replicate)){
                        areacell = wgtage$area,
                        species = wgtage$mfdbSpp,
                        sampling_type = wgtage$fishery,
-                       age = wgtage$ageCal,
+                       #age = wgtage$ageCal,
+                       age = wgtage$age,
                        weight = wgtage$value/1e3, ## kg
                        stringsAsFactors = TRUE
                      ),
                      data_source = paste0('atlantis_wgtage_rep', i)
   )
-  
-} ## For i in replicates
+}
 
 
 # ---------------------------------------------------
@@ -362,8 +427,8 @@ tmp <- simStartPars %>%
   filter(variable == "Natage") %>%
   left_join(sppList) %>%
   rename(age = agecl) %>%
-  mutate(year=10, month = 1) %>% # initial year is 40
-  mutate(area = NA)
+  mutate(year=1948, month = 1) %>% # initial year is 40
+  mutate(area = NA) 
 
 ggplot(tmp %>% filter(age!=1)) + geom_point(aes(age,value)) + facet_wrap(~mfdbSpp, scale="free") + ylim(0,NA)
 
@@ -389,7 +454,7 @@ tmp <-
   filter(variable == "AvgRec") %>%
   left_join(sppList) %>%
   mutate(age = cut(RecruitMonth, breaks=c(1,12,24,36), labels=0:2, include.lowest=T)) %>% # recruitment assumed at age0 ***CHECK
-  mutate(year=1, month = 1) %>% # use year1 to store avg recr
+  mutate(year=1948, month = 1) %>% # use year1 to store avg recr
   mutate(area = NA)
 
 mfdb_import_survey(mdb,
@@ -414,7 +479,7 @@ tmp <- simStartPars %>%
   left_join(sppList) %>%
   mutate(age = agecl) %>% #ifelse(ageGrpSize == 2, agecl*2-1, # assign the first age in the age class
                       #ifelse(ageGrpSize == 4, agecl*4-1, agecl))) %>%
-  mutate(year=10, month = 1) %>% # *** verify that initial year is 40
+  mutate(year=1948, month = 1) %>% # *** verify that initial year is 40
   mutate(area = NA)
 
 mfdb_import_survey(mdb,

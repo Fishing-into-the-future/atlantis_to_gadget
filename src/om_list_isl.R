@@ -44,7 +44,7 @@ om_index_isl <- function(usersurvey = usersurvey_file,
   # user options for survey--default is a census with mid-year sample
   # allows muliple surveys
   survObsBiomBs <- list()
-  survObsNumBs <- list()
+  #survObsNumBs <- list()
   
   for (s in usersurvey)
   {
@@ -61,12 +61,12 @@ om_index_isl <- function(usersurvey = usersurvey_file,
     
     #number based fishery independent survey index
     # this uses result$biomass_ages to sample biomass directly, no need for wt@age est
-    survey_N <- atlantisom::create_survey(dat = omlist_ss$truenums_ss,
-                                          time = survtime,
-                                          species = survspp,
-                                          boxes = survboxes,
-                                          effic = surveffic,
-                                          selex = survselex)
+    # survey_N <- atlantisom::create_survey(dat = omlist_ss$truenums_ss,
+    #                                       time = survtime,
+    #                                       species = survspp,
+    #                                       boxes = survboxes,
+    #                                       effic = surveffic,
+    #                                       selex = survselex)
     
     # call sample_survey_biomass with a bunch of 1000s for weight at age
     # in the code it multiplies atoutput by wtatage/1000 so this allows us to use
@@ -80,11 +80,11 @@ om_index_isl <- function(usersurvey = usersurvey_file,
     # using the census cv of 0 will produce identical reps!
     
     survObsBiomB <- list()
-    survObsNumB <- list()
+ #   survObsNumB <- list()
     
     for(i in 1:n_reps){
       survObsBiomB[[i]] <- sample_survey_biomass_box(survey_B, surv_cv, wtage)
-      survObsNumB[[i]] <- sample_survey_numbers_box(survey_N, surv_cv)
+  #    survObsNumB[[i]] <- sample_survey_numbers_box(survey_N, surv_cv)
     }
     
     #testB <- atlantisom::sample_survey_biomass(survey_B, surv_cv, wtage)
@@ -94,16 +94,16 @@ om_index_isl <- function(usersurvey = usersurvey_file,
     if(save){
       saveRDS(survObsBiomB, file.path(d.name, paste0(scenario.name, "_",
                                                      survey.name, "surveyB.rds")))
-      saveRDS(survObsNumB, file.path(d.name, paste0(scenario.name, "_",
-                                                     survey.name, "surveyN.rds")))
+ #     saveRDS(survObsNumB, file.path(d.name, paste0(scenario.name, "_",
+ #                                                     survey.name, "surveyN.rds")))
     }
     
     survObsBiomBs[[survey.name]] <- survObsBiomB
-    survObsNumBs[[survey.name]] <- survObsNumB
+  #  survObsNumBs[[survey.name]] <- survObsNumB
   }
   
-  indices <- list("survObsBiomB" = survObsBiomBs,
-                  "survObsNumB" = survObsNumBs)
+  indices <- list("survObsBiomB" = survObsBiomBs)
+                  #"survObsNumB" = survObsNumBs)
   
   #configure the fishery, a default is in config/fisherycensus.R
   #fishery configuration can specify only area and time of observation

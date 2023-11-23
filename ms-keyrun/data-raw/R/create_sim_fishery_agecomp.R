@@ -46,7 +46,7 @@ create_sim_fishery_agecomp <- function(atlmod,fitstart=NULL,fitend=NULL,saveToDa
   
   #Number of years
   nyears <- omlist_ss$runpar$nyears
-  total_sample <- omlist_ss$runpar$tstop/omlist_ss$runpar$outputstep
+  total_sample <- floor(omlist_ss$runpar$tstop/omlist_ss$runpar$outputstep)
   
   # user specified fit start and times if different from full run
   fitstartyr <- ifelse(!is.null(fitstart), fitstart-1, 0)
@@ -77,7 +77,7 @@ create_sim_fishery_agecomp <- function(atlmod,fitstart=NULL,fitend=NULL,saveToDa
     #arrange into wide format: year, Species1, Species2 ... and write csv
     fishage <- fish_annage_comp[[f]][[1]] %>%
       dplyr::filter(time %in% fittimes) %>%
-      dplyr::mutate(year = ceiling(time/stepperyr)) %>%
+      dplyr::mutate(year = ceiling(time*omlist_ss$runpar$outputstep/365)) %>%
       dplyr::select(species, year, agecl, atoutput) %>%
       dplyr::group_by(species, year, agecl) %>%
       dplyr::summarise(Natage = sum(atoutput)) %>%

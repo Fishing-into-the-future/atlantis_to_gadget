@@ -21,13 +21,20 @@ timestep <- stepperyr # 4
 # snapshots (biomass, numbers) with
 # cumulative outputs (fishery catch, numbers)
 
-survey_sample_time <- 3 # autumn survey
+#survey_sample_time <- 4 # autumn survey
+survey_sample_time <- 4 # autumn survey, step
 
 # The last timestep to sample
-total_sample <- noutsteps-1 # 262
+#total_sample <- noutsteps-1 # 262
 
 #Vector of indices of survey times to pull
-survey_sample_full <- seq(survey_sample_time, total_sample, by=timestep)
+# survey_sample_full <- seq(survey_sample_time, total_sample, by=timestep)
+survey_sample_full <- 
+  omlist_ss$time_lookup %>% 
+  filter(step == survey_sample_time,
+         simyear > 0,
+         !(doy == 365 & month == 12)) %>% 
+  pull(simtimestep)
 
 survtime <- survey_sample_full
 
@@ -62,17 +69,21 @@ surveffN <- data.frame(species=survspp, effN=rep(15000, length(survspp)))
 
 # survey index cv needed for sample_survey_xxx
 # cv = 0.1
-surv_cv <- data.frame(species=survspp, cv=rep(0.2,length(survspp)))
-#surv_cv <- data.frame(species=survspp, cv=rep(0,length(survspp)))
+#surv_cv <- data.frame(species=survspp, cv=rep(0.2,length(survspp)))
+surv_cv <- data.frame(species=survspp, cv=rep(0,length(survspp)))
 
 age_prop <- data.frame(species=survspp, prop=0.25)
 
 # length at age cv for input into calc_age2length function
 # function designed to take one cv for all species, need to change to pass it a vector
-lenage_cv <- 0.13
+lenage_cv <- data.frame(species=rep(names(annages), n_annages), #  
+                        agecl=unlist(sapply(n_annages,seq)),
+                        cvlenage=c(0.15,0.15,0.15,0.13,0.13,0.12,0.11,0.11,0.09,0.09,0.12,0.12,0.12,0.12,0.12,0.12))
+#lenage_cv <- 0.13
+#lenage_cv <- 0.1
 
 # max size bin for length estimation, function defaults to 150 cm if not supplied
-maxbin <- 150
+maxbin <- 200
 
 # diet sampling parameters
 alphamult <- 10000000

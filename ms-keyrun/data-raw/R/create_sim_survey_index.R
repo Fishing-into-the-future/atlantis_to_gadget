@@ -45,7 +45,7 @@ create_sim_survey_index <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=
   
   #Number of years
   nyears <- omlist_ss$runpar$nyears
-  total_sample <- omlist_ss$runpar$tstop/omlist_ss$runpar$outputstep
+  total_sample <- floor(omlist_ss$runpar$tstop/omlist_ss$runpar$outputstep)
   
   # user specified fit start and times if different from full run
   fitstartyr <- ifelse(!is.null(fitstart), fitstart-1, 0)
@@ -60,7 +60,7 @@ create_sim_survey_index <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=
   #fit_years <- unique(floor(fittimes/stepperyr)) #from Christine's new sardine_config.R
   #fittimes.days <- if(omlist_ss$runpar$outputstepunit=="days") fittimes*omlist_ss$runpar$outputstep
   
-  
+ 
   # survey cv lookup from config files
   svcvlook <- tibble::tibble()
   for(c in 1:length(svcon)){
@@ -75,11 +75,11 @@ create_sim_survey_index <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=
   #multiple surveys named in list object
   for(s in names(survObsBiom)){
     for (j in 1:length(survObsBiom[[s]])){
-      
+     
       #arrange into wide format: year, Species1, Species2 ... and write csv
       svbio <- survObsBiom[[s]][[j]] %>%
         dplyr::filter(time %in% fittimes) %>%
-        dplyr::mutate(year = ceiling(time/stepperyr)) %>%
+        dplyr::mutate(year = ceiling(time*omlist_ss$runpar$outputstep/365)) %>%
         dplyr::select(species, year, polygon, atoutput) %>%
         dplyr::rename(biomass = atoutput) %>%
         dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%

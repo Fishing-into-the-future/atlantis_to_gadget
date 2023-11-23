@@ -3,16 +3,56 @@
 ## -----------------------------------------------------------------------------
 
 indices_igfs <-
-  mfdb_sample_totalweight(mdb, NULL,
-                    c(list(data_source = 'atlantis_survey_biomass',
+  mfdb_sample_totalweight(mdb, "data_source",
+                    c(list(data_source = paste0('atlantis_survey_biomass_rep', 1:nboots),
                            sampling_type = 'IGFS'),
-                      defaults))
+                      defaults))[[1]] %>% 
+  split(.$data_source) %>% 
+  map(dplyr::select, -data_source)
 
 indices_aut <-
-  mfdb_sample_totalweight(mdb, NULL,
-                    c(list(data_source = 'atlantis_survey_biomass',
+  mfdb_sample_totalweight(mdb, "data_source",
+                    c(list(data_source = paste0('atlantis_survey_biomass_rep', 1:nboots),
                            sampling_type = 'AUT'),
-                      defaults))
+                      defaults))[[1]] %>% 
+  split(.$data_source) %>% 
+  map(dplyr::select, -data_source)
+
+
+numindices_igfs <- 
+  mfdb_sample_count(mdb, 
+                    c('length'), 
+                    c(list(
+                      data_source = paste0('atlantis_survey_numbers_rep', 1:nboots),
+                      sampling_type = 'IGFS',
+                      #length = mfdb_interval('len', c(5,20,35,45,60,80,100), open_ended = c('lower', 'upper'))),
+                      length = mfdb_interval('len', c(5,35,45,60,80,100), open_ended = c('lower', 'upper'))),
+                      defaults)) %>% 
+  purrr::map(function(y){
+    y %>% 
+      split(.,~length) %>% 
+      purrr::map(function(x){
+        structure(x, length = attr(x, 'length')[unique(x$length)])
+      })
+  }) 
+
+numindices_aut <- 
+  mfdb_sample_count(mdb, 
+                    c('length'), 
+                    c(list(
+                      data_source = paste0('atlantis_survey_numbers_rep', 1:nboots),
+                      sampling_type = 'AUT',
+                      #length = mfdb_interval('len', c(5,20,35,45,60,80,100), open_ended = c('lower', 'upper'))),
+                      length = mfdb_interval('len', c(5,35,45,60,80,100), open_ended = c('lower', 'upper'))),
+                      defaults)) %>% 
+  purrr::map(function(y){
+    y %>% 
+      split(.,~length) %>% 
+      purrr::map(function(x){
+        structure(x, length = attr(x, 'length')[unique(x$length)])
+      })
+  })
+
 
 
 if (run_bootstrap){

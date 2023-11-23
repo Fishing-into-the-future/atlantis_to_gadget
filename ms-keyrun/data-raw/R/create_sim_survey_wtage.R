@@ -66,7 +66,7 @@ create_sim_survey_wtage <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=
   
   #Number of years
   nyears <- omlist_ss$runpar$nyears
-  total_sample <- omlist_ss$runpar$tstop/omlist_ss$runpar$outputstep
+  total_sample <- floor(omlist_ss$runpar$tstop/omlist_ss$runpar$outputstep)
   
   # user specified fit start and times if different from full run
   fitstartyr <- ifelse(!is.null(fitstart), fitstart-1, 0)
@@ -99,7 +99,7 @@ create_sim_survey_wtage <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=
       #arrange into wide format: year, Species1, Species2 ... and write csv
       svwtage <- annage_wtage[[s]][[j]] %>%
         dplyr::filter(time %in% fittimes) %>%
-        dplyr::mutate(year = ceiling(time/stepperyr)) %>%
+        dplyr::mutate(year = ceiling(time*omlist_ss$runpar$outputstep/365)) %>%
         dplyr::select(species, year, agecl, atoutput) %>%
         dplyr::rename(Wtage = atoutput) %>%
         dplyr::left_join(dplyr::select(omlist_ss$funct.group_ss, Code, Name), by = c("species" = "Name")) %>%

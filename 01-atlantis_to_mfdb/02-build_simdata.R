@@ -21,8 +21,8 @@ library(tidyverse)
 
 for (i in dir('ms-keyrun/data-raw/R')) source(file.path('ms-keyrun/data-raw/R', i))
 
-fitstart <- 10
-fitend <- 73
+fitstart <- NULL
+fitend <- NULL
 saveToData <- FALSE
 outputfolder <- file.path('ms-keyrun/data-raw/atlantisoutput', v.name, sampling_id)
 if (!dir.exists(outputfolder)) dir.create(outputfolder, recursive = TRUE)
@@ -46,8 +46,8 @@ saveRDS(simStartPars, file.path(outputfolder, "simStartPars.rds"))
 # In atlantisom::load_nc_physics(dir = file.path(d.name, v.name),  :
 # 0% of entries are min-pools (0, 1e-08, 1e-16)
 
-simSurveyBottemp <- create_sim_survey_bottemp(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
-saveRDS(simSurveyBottemp, file.path(outputfolder, "simSurveyBottemp.rds"))
+#simSurveyBottemp <- create_sim_survey_bottemp(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+#saveRDS(simSurveyBottemp, file.path(outputfolder, "simSurveyBottemp.rds"))
 
 ## -----------------------------------------------------------------------------
 ## SURVEY DATASETS
@@ -60,6 +60,9 @@ saveRDS(simSurveyInfo, file.path(outputfolder, "simSurveyInfo.rds"))
 ## Biomass index
 simSurveyIndex <- create_sim_survey_index(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
 saveRDS(simSurveyIndex, file.path(outputfolder, "simSurveyIndex.rds"))
+
+simSurveyIndexNums <- create_sim_survey_index_numbers(config_file, fitstart=fitstart, fitend=fitend, saveToData=saveToData)
+saveRDS(simSurveyIndexNums, file.path(outputfolder, "simSurveyIndexNums.rds"))
 
 # simSurveyIndex %>% 
 #   filter(variable == 'biomass') %>% 
@@ -156,6 +159,8 @@ for (i in seq_along(iceom_ms$boxpars$boxes)){
 is_fisheries <- 
   mfdbatlantis:::fetch_xml_attributes(XML::xmlParse(attr(is_dir, "xml_fisheries")), "Fishery", 
                                       c("Code", "Index", "Name", "IsRec", "NumSubFleets"), stringsAsFactors = FALSE)
+saveRDS(is_fisheries, file.path(outputfolder, "is_fisheries.rds"))
+
 
 fisherydata <- NULL
 for (fisheryCode in is_fisheries$Code){
@@ -183,7 +188,9 @@ for (fisheryCode in is_fisheries$Code){
 fisherydata <- 
   fisherydata %>% 
   mutate(ModSim = unique(simFisheryLencomp$ModSim),
-         time = year - (1948-1)) %>% 
+         simyear = ceiling((time/60/60/24)/365)) %>%
+  select(-year) %>% 
+  left_join(iceom$time_lookup %>% select(simyear, year) %>% distinct(), by = "simyear") %>% 
   rename(fishMonth = month,
          Code = functional_group) %>% 
   select(-species)

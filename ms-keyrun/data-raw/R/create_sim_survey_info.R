@@ -22,7 +22,7 @@ create_sim_survey_info <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=T
 
   # input is path to model config file for atlantisom
   source(atlmod)
-  
+ 
   # path for survey and fishery config files
   cfgpath <- stringr::str_extract(atlmod, ".*config")
   

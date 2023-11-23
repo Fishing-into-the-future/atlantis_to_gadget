@@ -3,7 +3,7 @@ survspp <- omlist_ss$species_ss
 
 # survey season and other time dimensioning parameters
 # generalized timesteps all models
-noutsteps <- floor(omlist_ss$runpar$tstop / omlist_ss$runpar$outputstep)
+noutsteps <- length(seq(0, omlist_ss$runpar$tstop, by = omlist_ss$runpar$outputstep))# floor(omlist_ss$runpar$tstop / omlist_ss$runpar$outputstep)
 timeall <- c(0:noutsteps)
 stepperyr <- if(omlist_ss$runpar$outputstepunit=="days") round(365/omlist_ss$runpar$toutinc, 0)
 midptyr <- round(median(seq(0,stepperyr)))

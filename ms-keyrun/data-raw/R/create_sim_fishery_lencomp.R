@@ -46,7 +46,7 @@ create_sim_fishery_lencomp <- function(atlmod,fitstart=NULL,fitend=NULL,saveToDa
   
   #Number of years
   nyears <- omlist_ss$runpar$nyears
-  total_sample <- omlist_ss$runpar$tstop/omlist_ss$runpar$outputstep
+  total_sample <- floor(omlist_ss$runpar$tstop/omlist_ss$runpar$outputstep)
   
   # throw an error if fstepperyr is not equal to stepperyr
   if(stepperyr != fstepperyr) stop("Error: check Atlantis timestep output for fishery")
@@ -81,7 +81,7 @@ create_sim_fishery_lencomp <- function(atlmod,fitstart=NULL,fitend=NULL,saveToDa
       #arrange into wide format: year, Species1, Species2 ... and write csv
       fishlenbin <- catchlen_ss[[f]][[j]] %>%
         dplyr::filter(time %in% fittimes) %>%
-        dplyr::mutate(year = ceiling(time/stepperyr)) %>%
+        dplyr::mutate(year = ceiling(time*omlist_ss$runpar$outputstep/365)) %>%
         dplyr::select(species, year, lower.bins, atoutput) %>%
         dplyr::group_by(species, year, lower.bins) %>%
         dplyr::summarise(Natlen = sum(atoutput)) %>%

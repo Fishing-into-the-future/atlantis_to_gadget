@@ -56,8 +56,10 @@ om_comps_isl <- function(usersurvey = usersurvey_file,
   survObsWtAtAges <- list()
   survObsLenCompsSubset <- list()
   
+  print('SURVEYS:')
   for (s in usersurvey)
   {
+    print(s)
     source(s, local = TRUE)
     
     #numbers based fishery independent survey for age and length comps
@@ -72,7 +74,9 @@ om_comps_isl <- function(usersurvey = usersurvey_file,
     #Sample fish for age composition
     # if we want replicates for obs error this sample function will generate them
     age_comp_data <- list()
+    cat('Index\n\n')
     for(i in 1:n_reps){
+      print(i)
       age_comp_data[[i]] <- atlantisom::sample_fish(survey_N, surveffN)
     }
     
@@ -82,7 +86,7 @@ om_comps_isl <- function(usersurvey = usersurvey_file,
                                                       survey.name, "survObsAgeComp.rds")))
     }
     
-    #weights needed for weight at age and length comp calcs
+    # weights needed for weight at age and length comp calcs
     # aggregate true resn per survey design
     survey_aggresn <- atlantisom::aggregateDensityData(dat = omlist_ss$trueresn_ss,
                                                        time = survtime,
@@ -108,7 +112,8 @@ om_comps_isl <- function(usersurvey = usersurvey_file,
     survObsWtAtAge <- list()
     
     for(i in 1:n_reps){
-      
+      cat('Age to Len\n\n')
+      print(i)
       survey_lenwt[[i]] <- calc_age2length_isl(structn = structnss,
                                                        resn = resnss,
                                                        nums = age_comp_data[[i]],
@@ -149,6 +154,7 @@ om_comps_isl <- function(usersurvey = usersurvey_file,
   # only one fishery, but multiple fleets possible within it
   source(userfishery, local = TRUE)
   
+  print('FISHERIES')
   #fishery catch at age each observed timestep summed over observed polygons
   # catch at age by area and timestep
   catch_numbers <-  atlantisom::create_fishery_subset(dat = omlist_ss$truecatchnum_ss,
@@ -194,7 +200,9 @@ om_comps_isl <- function(usersurvey = usersurvey_file,
   fishObsWtAtAge <- list()
   fishObsLenCompSubset <- list()
   
+  cat('Age to Len\n\n')
   for(i in 1:n_reps){
+    print(i)
     fishery_lenwt[[i]] <- calc_age2length_isl(structn = catch_structnss,
                                                       resn = catch_resnss,
                                                       nums = catch_age_comp[[i]],

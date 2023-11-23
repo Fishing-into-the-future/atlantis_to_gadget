@@ -23,16 +23,18 @@ source('src/sample_ages_isl.R')
 source('src/calc_age2length_isl.R')
 source('src/sample_survey_biomass_box.R')
 source('src/sample_survey_numbers_box.R')
+source('src/compile_lengthindices.R')
 
 
 ## Some variables
 atlantis_dir <- '../../Atlantis/AtlantisIceland/v6610'
 base_dir <- '01-atlantis_to_mfdb'
 
-nreps <- 100
-sampling_id <- paste0('effic1_cv02_rep', nreps)
+nreps <- 1
+sampling_id <- paste0('v3_effic1_cv00_rep', nreps)
 
 species_ss <- 'Cod'
+origin_year <- 1948
 
 ## Set Atlantis file locations
 config_file <- file.path('config', 'v6610.R')
@@ -41,7 +43,7 @@ source(config_file)
 ## For mfdbatlantis
 is_dir <- atlantis_directory(path = file.path(atlantis_dir, 'Out'),
                              xml_bio = mfdbatlantis:::first_file(file.path(atlantis_dir, 'Out'), '*[Bb]*.xml'),
-                             start_year = 1948)
+                             start_year = origin_year)
 
 ## -----------------------------------------------------------------------------
 ## STEP 2: read in the Atlantis truth
@@ -55,22 +57,57 @@ is_dir <- atlantis_directory(path = file.path(atlantis_dir, 'Out'),
 
 iceom <- om_init(config_file, atlantis_dir)
 print(names(iceom))
-iceom_ms <- om_species(species_ss, iceom, save = TRUE)
-#saveRDS(iceom_ms, file.path(atlantis_dir, paste0(scenario.name, "omlist_ss.rds")))
+
+## Lookup for atlantis time to calender months and annual steps
+iceom$time_lookup <- 
+  data.frame(simtime = seq(0, iceom$runpar$tstop, by = 90)) %>% 
+  mutate(simyear = floor(simtime/365),
+         simtimestep = 0:(n()-1),
+         year = local(origin_year) + simyear,
+         doy = simtime - simyear*365,
+         month = as.numeric(format(as.Date(.data$doy, origin = '2023-01-01'), '%m')), ## Using non-leap year as origin
+         step = ceiling(month/3))
+
+iceom_ms <- om_species(species_ss, iceom, save = FALSE)
+iceom_ms$time_lookup <- iceom$time_lookup
+saveRDS(iceom_ms, file.path(atlantis_dir, paste0(scenario.name, "omlist_ss.rds")))
 print(names(iceom_ms))
 
+## Lookup for atlantis time to calender months and annual steps
+iceom$time_lookup <- 
+  data.frame(simtime = seq(0, iceom$runpar$tstop, by = 90)) %>% 
+  mutate(simtimestep = 0:(n()-1),
+         simyear = ceiling(simtime/365),
+         year = local(origin_year) - 1 + simyear,
+         doy = simtime - (simyear-1)*365,
+         month = as.numeric(format(as.Date(.data$doy-1, origin = '2023-01-01'), '%m')), ## Using non-leap year as origin
+         step = ceiling(month/3))
 
+iceom_ms$time_lookup <- iceom$time_lookup
+
+## Biomass based indices
 iceom_ms_ind <- om_index_isl(usersurvey = c("config/isl_survey_igfs.R", "config/isl_survey_aut.R"),
                              userfishery = NULL, #c("config/isl_fishery.R"),
                              omlist_ss = iceom_ms, 
-                             n_reps = nreps, 
+                             n_reps = 1, 
                              save = TRUE)
 
+## Numbers per length interval
+iceom_ms_ind$survObsNumB <- compile_lengthindices(usersurvey = c("config/isl_survey_igfs.R", 
+                                                                 "config/isl_survey_aut.R"),
+                                                  omlist_ss = iceom_ms)
+
+## Catch compositions
 iceom_ms_comp <- om_comps_isl(usersurvey = c("config/isl_survey_igfs.R", "config/isl_survey_aut.R"),
                               userfishery = c("config/isl_fishery.R"),
                               omlist_ss = iceom_ms, 
                               n_reps = nreps, 
                               save = TRUE)
+
+fs::dir_create(path = file.path('ms-keyrun/data-raw/atlantisoutput', v.name, sampling_id))
+save(iceom, iceom_ms, file = file.path('ms-keyrun/data-raw/atlantisoutput', v.name, sampling_id, 'iceom.Rdata'))
+save(iceom_ms_ind, iceom_ms_comp, 
+     file = file.path('ms-keyrun/data-raw/atlantisoutput', v.name, sampling_id, 'iceom_samples.Rdata'))
 
 
 

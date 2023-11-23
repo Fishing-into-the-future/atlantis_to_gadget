@@ -47,7 +47,7 @@ create_sim_fishery_agelen_subannual <- function(atlmod,fitstart=NULL,fitend=NULL
   
   #Number of years
   nyears <- omlist_ss$runpar$nyears
-  total_sample <- omlist_ss$runpar$tstop/omlist_ss$runpar$outputstep
+  total_sample <- floor(omlist_ss$runpar$tstop/omlist_ss$runpar$outputstep)
   
   # throw an error if fstepperyr is not equal to stepperyr
   if(stepperyr != fstepperyr) stop("Error: check Atlantis timestep output for fishery")
@@ -82,8 +82,8 @@ create_sim_fishery_agelen_subannual <- function(atlmod,fitstart=NULL,fitend=NULL
       #arrange into wide format: year, Species1, Species2 ... and write csv
       fishlenbin <- catchlen_ss[[f]][[j]] %>%
         dplyr::filter(time %in% fittimes) %>%
-        dplyr::mutate(year = ceiling(time/stepperyr),
-                      fishMonth = 12 + ceiling(time/stepperyr*12) - year*12) %>%
+        dplyr::mutate(year = ceiling(time*omlist_ss$runpar$outputstep/365),
+                      fishMonth = ceiling((time*omlist_ss$runpar$outputstep/365-(year-1))*12)) %>%
         dplyr::select(species, agecl, fishMonth, year, lower.bins, atoutput) %>%
         dplyr::group_by(species, agecl, year, fishMonth, lower.bins) %>%
         dplyr::summarise(Natlen = sum(atoutput)) %>%
