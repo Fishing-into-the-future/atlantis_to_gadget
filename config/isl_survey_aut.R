@@ -22,7 +22,7 @@ timestep <- stepperyr # 4
 # cumulative outputs (fishery catch, numbers)
 
 #survey_sample_time <- 4 # autumn survey
-survey_sample_time <- 4 # autumn survey, step
+survey_sample_time <- 10 # autumn survey, month
 
 # The last timestep to sample
 #total_sample <- noutsteps-1 # 262
@@ -31,9 +31,8 @@ survey_sample_time <- 4 # autumn survey, step
 # survey_sample_full <- seq(survey_sample_time, total_sample, by=timestep)
 survey_sample_full <- 
   omlist_ss$time_lookup %>% 
-  filter(step == survey_sample_time,
-         simyear > 0,
-         !(doy == 365 & month == 12)) %>% 
+  filter(month == survey_sample_time,
+         simyear > 0) %>% 
   pull(simtimestep)
 
 survtime <- survey_sample_full
@@ -57,7 +56,7 @@ if (FALSE){
   # for annage output uses names(annages) NOT alphabetical survspp
   survselex <- data.frame(species=rep(names(annages), n_annages), #  
                           agecl=unlist(sapply(n_annages,seq)),
-                          selex= c(0,0.1,0.5,0.8,1,1,1,1,1,1,1,1,1,1,1,1))#c(rep(0, 3), rep(1.0,sum(n_annages-3))))  
+                          selex= c(0.1,0.3,0.5,0.7,0.8,0.9,0.9,1,1,1,1,1,1,1,1,1))#c(rep(0, 3), rep(1.0,sum(n_annages-3))))  
 }
 
 survselex.agecl <- survselex

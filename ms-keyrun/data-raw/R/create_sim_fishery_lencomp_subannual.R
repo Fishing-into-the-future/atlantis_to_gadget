@@ -84,7 +84,8 @@ create_sim_fishery_lencomp_subannual <- function(atlmod,fitstart=NULL,fitend=NUL
       fishlenbin <- catchlen_ss[[f]][[j]] %>%
         dplyr::filter(time %in% fittimes) %>%
         dplyr::mutate(year = ceiling(time*omlist_ss$runpar$outputstep/365),
-                      fishMonth = ceiling((time*omlist_ss$runpar$outputstep/365-(year-1))*12)) %>% 
+                      doy = time*omlist_ss$runpar$toutinc-(year-1)*365,
+                      fishMonth = as.numeric(format(as.Date(.data$doy-1, origin = '2023-01-01'), '%m'))) %>%
         dplyr::select(species, year, fishMonth, lower.bins, atoutput) %>%
         dplyr::group_by(species, year, fishMonth, lower.bins) %>%
         dplyr::summarise(Natlen = sum(atoutput)) %>%

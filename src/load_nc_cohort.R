@@ -120,7 +120,7 @@ load_nc_cohort <- function(dir = getwd(), file_nc, bps, fgs, biolprm, select_gro
   # we introduce different combinations of groups, variable, and cohort
   # Only combinations present in the ncdf are used later on
   # Loop over select_groups to use the same ordering
-  
+
   names(biolprm$agespercohort) <- c("code", "ageperagecl")
   
   maxage <- merge(biolprm$maturityogive, biolprm$agespercohort, all.x = T) %>%

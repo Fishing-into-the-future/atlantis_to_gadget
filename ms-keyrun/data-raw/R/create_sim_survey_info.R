@@ -48,7 +48,7 @@ create_sim_survey_info <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=T
     source(svcon[c], local = TRUE)
     surv_inf_n <- surv_cv %>% 
       dplyr::mutate(survey = survey.name,
-                    survMonth = ceiling((survey_sample_time/timestep*365)/(365/12)),
+                    survMonth = survey_sample_time,
                     survArea = ifelse(length(survboxes) == length(allboxes), "All", "Subset"))
     allsvinfo <- dplyr::bind_rows(allsvinfo, surv_inf_n)
   }

@@ -47,7 +47,7 @@ library(mfdbatlantis)
 library(tidyverse)
 
 
-sampling_id <- 'v3_effic1_cv00_rep1'
+sampling_id <- 'v8_effic1'
 for (i in dir(file.path('ms-keyrun/data-raw/atlantisoutput/Out', sampling_id))){
   if (grepl('rds', i)){
     assign(gsub('\\.rds', '', i), readRDS(file.path('ms-keyrun/data-raw/atlantisoutput/Out', sampling_id, i)))
@@ -56,9 +56,9 @@ for (i in dir(file.path('ms-keyrun/data-raw/atlantisoutput/Out', sampling_id))){
 load(file = file.path('ms-keyrun/data-raw/atlantisoutput/Out', sampling_id, 'iceom.Rdata'))
 
 if (FALSE){
-  mfdb(file.path('db', 'atlantisiceland_baseline_v3.duckdb'), destroy_schema = TRUE)
+  mfdb(file.path('db', 'atlantisiceland_v8_effic1.duckdb'), destroy_schema = TRUE)
 }
-mdb <- mfdb(file.path('db', 'atlantisiceland_baseline_v3.duckdb'))
+mdb <- mfdb(file.path('db', 'atlantisiceland_v8_effic1.duckdb'))
 
 
 ## -----------------------------------------------------------------------------
@@ -127,46 +127,7 @@ mfdb_import_sampling_type(mdb,
 ## Subannual landings
 ## -----------------------------------------------------------------------------
 
-# tmp <- simCatchIndexSubannual %>%
-#   ## filter(variable=="catch")
-#   mutate(units=NULL,
-#          area = paste0('Box', area)) %>%
-#   group_by(ModSim, year, fishMonth, Code, Name, fishery, variable) %>% 
-#   summarise(value = sum(value), .groups = 'drop') %>% 
-#   tidyr::spread(variable,value) %>%
-#   left_join(sppList) %>% 
-#   mutate(area = NA)
-# 
-# 
-# mfdb_import_survey(mdb,
-#                    data.frame(year = tmp$year,
-#                               month = tmp$fishMonth,
-#                               areacell = tmp$area,
-#                               #gear = fisherydata$fisheryCode,
-#                               #tow = fisherydata$tow,
-#                               species = tmp$mfdbSpp,
-#                               weight_total =tmp$catch,
-#                               weight_var = tmp$cv,
-#                               sampling_type = tmp$fishery,
-#                               stringsAsFactors = TRUE),
-#                    data_source = 'atlantis_fisheries')
-
-
-
-## OLD VERSION
-
-# ## Going to go with mfdbatlantis here...
-# ## Because the stock_truth$catch looks odd... to do with the log.txt?
-# 
-# ## Read fishery types & upload as gears
-# is_fisheries <- mfdbatlantis:::fetch_xml_attributes(XML::xmlParse(attr(is_dir, "xml_fisheries")), 
-#                                                       "Fishery", 
-#                                                       c("Code", "Index", "Name", "IsRec", "NumSubFleets"), 
-#                                                     stringsAsFactors = FALSE)
-# 
-# 
-# # is_fisheries <- mfdbatlantis::atlantis_fisheries(is_dir)
-# 
+## Gear taxonomies
 mfdb_import_cs_taxonomy(mdb,
                         'gear',
                         tibble(id = 1:nrow(is_fisheries),
@@ -181,21 +142,28 @@ mfdb_import_tow_taxonomy(mdb, data.frame(
   stringsAsFactors = FALSE))
 
 tmp <- 
-  fisherydata %>% 
-  right_join(sppList) %>% 
-  select(year, fishMonth, area, fisheryCode, tow, species = mfdbSpp, weight_total)
+  iceom$truth$catchtons %>% 
+  dplyr::mutate(tow = 'C') %>% 
+  dplyr::bind_rows(
+    iceom$truth$disctons %>% 
+      dplyr::mutate(tow = 'D')
+  ) %>% 
+  dplyr::left_join(iceom$time_lookup, by = 'time') %>% 
+  dplyr::left_join(sppList %>% 
+              dplyr::rename(species = Code) %>% 
+              dplyr::select(species, mfdbSpp), 
+            by = 'species')
 
 mfdb_import_survey(mdb,
                    data.frame(year = tmp$year,
-                              month = tmp$fishMonth,
-                              areacell = tmp$area,
-                              gear = tmp$fisheryCode,
+                              month = tmp$month,
+                              areacell = paste0('Box', tmp$polygon),
+                              gear = tmp$fleet,
                               tow = tmp$tow,
-                              species = tmp$species,
-                              weight_total = tmp$weight_total*1e3, ## to kg
+                              species = tmp$mfdbSpp,
+                              weight_total = tmp$atoutput*1e3, ## to kg
                               stringsAsFactors = TRUE),
                    data_source = 'atlantis_fisheries')
-
 
 
 ## -----------------------------------------------------------------------------
@@ -285,7 +253,7 @@ for (i in unique(simSurveyIndexNums$replicate)){
   ## -----------------------------------------------------------------------------
   
 cat('IMPORTING LENGTH DISTRIBUTIONS\n\n')
-for (i in unique(simSurveyIndex$replicate)){
+for (i in unique(simSurveyLencomp$replicate)){
   print(i)
   ldists <- 
     simSurveyLencomp %>%
@@ -327,7 +295,7 @@ for (i in unique(simSurveyIndex$replicate)){
   ## -----------------------------------------------------------------------------
   
 cat('IMPORTING AGE LENGTH DISTRIBUTIONS\n\n')
-for (i in unique(simSurveyIndex$replicate)){
+for (i in unique(simSurveyAgeLencomp$replicate)){
   print(i)
   aldists <- 
     simSurveyAgeLencomp %>%
@@ -375,7 +343,7 @@ for (i in unique(simSurveyIndex$replicate)){
   ## --------------------------------------------------
  
 cat('IMPORTING WEIGHT AT AGE\n\n')
-for (i in unique(simSurveyIndex$replicate)){
+for (i in unique(simSurveyWtatAge$replicate)){
   
   wgtage <- 
     simSurveyWtatAge %>% 

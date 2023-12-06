@@ -31,7 +31,7 @@ atlantis_dir <- '../../Atlantis/AtlantisIceland/v6610'
 base_dir <- '01-atlantis_to_mfdb'
 
 nreps <- 1
-sampling_id <- paste0('v3_effic1_cv00_rep', nreps)
+sampling_id <- 'TEST'# 'v8_effic1'
 
 species_ss <- 'Cod'
 origin_year <- 1948
@@ -55,35 +55,27 @@ is_dir <- atlantis_directory(path = file.path(atlantis_dir, 'Out'),
 ## need to account for > 10 cohorts.
 ## NOTE, the option of annage = TRUE should do this but not present in the Icelandic simulations
 
-iceom <- om_init(config_file, atlantis_dir)
+## Iceland operating model
+iceom <- om_init(config_file)
 print(names(iceom))
 
-## Lookup for atlantis time to calender months and annual steps
-iceom$time_lookup <- 
-  data.frame(simtime = seq(0, iceom$runpar$tstop, by = 90)) %>% 
-  mutate(simyear = floor(simtime/365),
-         simtimestep = 0:(n()-1),
-         year = local(origin_year) + simyear,
-         doy = simtime - simyear*365,
-         month = as.numeric(format(as.Date(.data$doy, origin = '2023-01-01'), '%m')), ## Using non-leap year as origin
-         step = ceiling(month/3))
-
-iceom_ms <- om_species(species_ss, iceom, save = FALSE)
-iceom_ms$time_lookup <- iceom$time_lookup
-saveRDS(iceom_ms, file.path(atlantis_dir, paste0(scenario.name, "omlist_ss.rds")))
-print(names(iceom_ms))
-
-## Lookup for atlantis time to calender months and annual steps
-iceom$time_lookup <- 
-  data.frame(simtime = seq(0, iceom$runpar$tstop, by = 90)) %>% 
-  mutate(simtimestep = 0:(n()-1),
+## Subset to specific species
+iceom_ms <- atlantisom::om_species(species_ss, iceom, save = FALSE)
+iceom_ms$time_lookup <- 
+  data.frame(simtime = seq(0, iceom$runpar$tstop, by = iceom$runpar$toutinc)) %>% 
+  mutate(time = 0:(n()-1),
          simyear = ceiling(simtime/365),
          year = local(origin_year) - 1 + simyear,
          doy = simtime - (simyear-1)*365,
          month = as.numeric(format(as.Date(.data$doy-1, origin = '2023-01-01'), '%m')), ## Using non-leap year as origin
-         step = ceiling(month/3))
+         step = 1,
+         step = ifelse(month %in% 4:5, 2, step),
+         step = ifelse(month %in% 6:8, 3, step),
+         step = ifelse(month %in% 9:10, 4, step),
+         step = ifelse(month %in% 11:12, 5, step))
 
-iceom_ms$time_lookup <- iceom$time_lookup
+saveRDS(iceom_ms, file.path(atlantis_dir, paste0(scenario.name, "omlist_ss.rds")))
+print(names(iceom_ms))
 
 ## Biomass based indices
 iceom_ms_ind <- om_index_isl(usersurvey = c("config/isl_survey_igfs.R", "config/isl_survey_aut.R"),

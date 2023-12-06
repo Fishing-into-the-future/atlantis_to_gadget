@@ -83,7 +83,8 @@ create_sim_fishery_agecomp_subannual <- function(atlmod,fitstart=NULL,fitend=NUL
     fishage <- fish_annage_comp[[f]][[1]] %>%
       dplyr::filter(time %in% fittimes) %>%
       dplyr::mutate(year = ceiling(time*omlist_ss$runpar$outputstep/365),
-                    fishMonth = ceiling((time*omlist_ss$runpar$outputstep/365-(year-1))*12)) %>%
+                    doy = time*omlist_ss$runpar$toutinc-(year-1)*365,
+                    fishMonth = as.numeric(format(as.Date(.data$doy-1, origin = '2023-01-01'), '%m'))) %>%
       dplyr::select(species, year, fishMonth, agecl, Natage = atoutput) %>%
       #dplyr::group_by(species, year, agecl) %>%
       #dplyr::summarise(Natage = sum(atoutput)) %>%

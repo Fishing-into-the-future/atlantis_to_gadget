@@ -22,6 +22,25 @@
 library(magrittr)
 
 create_sim_fishery_agelen <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=T) {
+  
+  read_savedfisheries2 <- function (dir, type) 
+  {
+    datlook <- data.frame(dattype = c("Catch", "catchAge", "catchLen", "catchLenSubset",
+                                      "catchWtage", "catchAnnAge", "catchAnnWtage"), 
+                          pattern = c("*fishCatch.rds", 
+                                      "*fishObsAgeComp.rds", "*fishObsLenComp.rds", "*fishObsLenCompSubset.rds",  
+                                      "*fishObsWtAtAge.rds", 
+                                      "*fishObsFullAgeComp.rds", "*fishObsFullWtAtAge.rds"))
+    fisheries <- list.files(path = dir, pattern = as.character(datlook$pattern[datlook$dattype %in% 
+                                                                                 type]), full.names = TRUE)
+    fishery.name <- stringr::str_match(fisheries, paste0(scenario.name, 
+                                                         "_\\s*(.*?)\\s", datlook$pattern[datlook$dattype == type]))[, 
+                                                                                                                     2]
+    
+    dat <- lapply(fisheries, readRDS)
+    names(dat) <- fishery.name
+    return(dat)
+  }
 
   # input is path to model config file for atlantisom
   source(atlmod)
@@ -34,7 +53,7 @@ create_sim_fishery_agelen <- function(atlmod,fitstart=NULL,fitend=NULL,saveToDat
   modsim <- modpath[length(modpath)]
   
   #read in survey annual age comp data
-  catchlen_ss <- atlantisom::read_savedfisheries(file.path(d.name,v.name), "catchLen")
+  catchlen_ss <- read_savedfisheries2(file.path(d.name,v.name), "catchLenSubset")
   
   # get config files -- needed?
   fvcon <- list.files(path=cfgpath, pattern = "*fishery*", full.names = TRUE)

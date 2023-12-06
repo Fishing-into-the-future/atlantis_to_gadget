@@ -103,7 +103,8 @@ create_sim_fishery_wtage_subannual <- function(atlmod,fitstart=NULL,fitend=NULL,
       fishwtage <- fish_annage_wtage[[f]][[j]] %>%
         dplyr::filter(time %in% fittimes) %>%
         dplyr::mutate(year = ceiling(time*omlist_ss$runpar$outputstep/365),
-                      fishMonth = ceiling((time*omlist_ss$runpar$outputstep/365-(year-1))*12)) %>%
+                      doy = time*omlist_ss$runpar$toutinc-(year-1)*365,
+                      fishMonth = as.numeric(format(as.Date(.data$doy-1, origin = '2023-01-01'), '%m'))) %>%
         dplyr::select(species, year, fishMonth, agecl,Wtage = atoutput) %>%
         #dplyr::group_by(species, year, agecl) %>%
         #dplyr::summarise(Wtage = mean(atoutput, na.rm=T)) %>%

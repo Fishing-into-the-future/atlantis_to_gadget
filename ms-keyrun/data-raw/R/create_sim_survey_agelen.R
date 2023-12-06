@@ -23,6 +23,24 @@ library(magrittr)
 
 create_sim_survey_agelen <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData=T) {
 
+  read_savedsurvs2 <- function (dir, type) 
+  {
+    datlook <- data.frame(dattype = c("survB", "survAge", "survLen", "survLenSubset",
+                                      "survWtage", "survAnnAge", "survAnnWtage", "survDiet"), 
+                          pattern = c("*surveyB.rds", "*survObsAgeComp.rds", "*survObsLenComp.rds", "*survObsLenComp.rds", 
+                                      "*survObsWtAtAge.rds", "*survObsFullAgeComp.rds", 
+                                      "*survObsFullWtAtAge.rds", "*surveydiet.rds"))
+    survs <- list.files(path = dir, pattern = as.character(datlook$pattern[datlook$dattype %in% 
+                                                                             type]), full.names = TRUE)
+    survey.name <- stringr::str_match(survs, paste0(scenario.name, 
+                                                    "_\\s*(.*?)\\s", datlook$pattern[datlook$dattype == type]))[, 
+                                                                                                                2]
+    dat <- lapply(survs, readRDS)
+    names(dat) <- survey.name
+    return(dat)
+  }
+  
+  
   # input is path to model config file for atlantisom
   source(atlmod)
   
@@ -34,7 +52,7 @@ create_sim_survey_agelen <- function(atlmod,fitstart=NULL,fitend=NULL,saveToData
   modsim <- modpath[length(modpath)]
   
   #read in survey annual age comp data
-  len_comp_data <- atlantisom::read_savedsurvs(file.path(d.name,v.name), 'survLen')
+  len_comp_data <- read_savedsurvs2(file.path(d.name,v.name), 'survLenSubset')
   
   # get config files -- needed?
   svcon <- list.files(path=cfgpath, pattern = "*survey*", full.names = TRUE)
