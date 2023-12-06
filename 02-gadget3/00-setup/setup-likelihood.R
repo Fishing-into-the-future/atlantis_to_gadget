@@ -99,7 +99,7 @@ if (numSIs){
           nll_breakdown = nll_breakdown,     
           report = lik_report)
       )
-    
+    #print(beta)
     surv.lik <- c(surv.lik, tmp)
     
   }
@@ -110,6 +110,7 @@ if (numSIs){
     if (include_si_slope){
       if (names(numindices_igfs[[boot_repl]])[[i]] %in% paste0('len', c(5,20))) beta <- NULL
     }
+    if (all_si_slope) beta <- NULL
     
     tmp <- 
       list(
@@ -122,7 +123,7 @@ if (numSIs){
           nll_breakdown = nll_breakdown,     
           report = lik_report)
       )
-    
+    #print(beta)
     surv.lik <- c(surv.lik, tmp)
     
   }
