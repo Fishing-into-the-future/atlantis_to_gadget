@@ -61,6 +61,9 @@ om_comps_isl <- function(usersurvey = usersurvey_file,
   {
     print(s)
     source(s, local = TRUE)
+
+    ## Create polygon*time scale for survey s
+    survey_scale <- create_polygon_scale(omlist_ss, survey = TRUE, surveffN)
     
     #numbers based fishery independent survey for age and length comps
     # same user specifications as indices
@@ -77,7 +80,7 @@ om_comps_isl <- function(usersurvey = usersurvey_file,
     cat('Index\n\n')
     for(i in 1:n_reps){
       print(i)
-      age_comp_data[[i]] <- atlantisom::sample_fish(survey_N, surveffN)
+      age_comp_data[[i]] <- sample_fish_box(survey_N, survey_scale)
     }
     
     # save age comps
@@ -100,9 +103,11 @@ om_comps_isl <- function(usersurvey = usersurvey_file,
                                                           boxes = survboxes)
     
     #dont sample these, just aggregate them using median
-    structnss <- atlantisom::sample_fish(survey_aggstructn, surveffN, sample = FALSE)
+    structnss <- sample_fish_box(survey_aggstructn, surveffN, sample = FALSE)
     
-    resnss <- atlantisom::sample_fish(survey_aggresn, surveffN, sample = FALSE)
+    resnss <- sample_fish_box(survey_aggresn, surveffN, sample = FALSE)
+    
+    
     
     #this is all input into the length function, replicates follow age comp reps
     #  separating the length comps from the weight at age here
@@ -112,7 +117,7 @@ om_comps_isl <- function(usersurvey = usersurvey_file,
     survObsWtAtAge <- list()
     
     for(i in 1:n_reps){
-      cat('Age to Len\n\n')
+      cat('Age to Len\n')
       print(i)
       survey_lenwt[[i]] <- calc_age2length_isl(structn = structnss,
                                                        resn = resnss,
@@ -125,10 +130,13 @@ om_comps_isl <- function(usersurvey = usersurvey_file,
       
       survObsLenComp[[i]] <- survey_lenwt[[i]]$natlength
       survObsWtAtAge[[i]] <- survey_lenwt[[i]]$muweight
+      
       survObsLenCompSubset[[i]] <- 
         sample_ages_isl(survey_lenwt[[i]]$natlength, age_prop) %>% 
         dplyr::select(-atoutput) %>% 
         dplyr::rename(atoutput = numAtAgeSamp)
+      
+      print('FINISHED')
     }
     
     if(save){
@@ -155,17 +163,22 @@ om_comps_isl <- function(usersurvey = usersurvey_file,
   source(userfishery, local = TRUE)
   
   print('FISHERIES')
+  
+  ## Create polygon*time scale for fisheries
+  fishery_scale <- create_polygon_scale(omlist_ss, survey = FALSE, fisheffN)
+  
   #fishery catch at age each observed timestep summed over observed polygons
   # catch at age by area and timestep
   catch_numbers <-  atlantisom::create_fishery_subset(dat = omlist_ss$truecatchnum_ss,
                                                       time = fishtime,
+                                                      fleets = NULL,
                                                       species = survspp,
                                                       boxes = fishboxes)
   
   # if we want replicates for obs error this sample function will generate them
   catch_age_comp <- list()
   for(i in 1:n_reps){
-    catch_age_comp[[i]] <- atlantisom::sample_fish(catch_numbers, fisheffN)
+    catch_age_comp[[i]] <- sample_fish_box(catch_numbers, fishery_scale)
   }
   
   # save fishery age comps
@@ -188,9 +201,9 @@ om_comps_isl <- function(usersurvey = usersurvey_file,
                                                          boxes = fishboxes)
   
   #dont sample these, just aggregate them using median
-  catch_structnss <- atlantisom::sample_fish(catch_aggstructnss, fisheffN, sample = FALSE)
+  catch_structnss <- sample_fish_box(catch_aggstructnss, fisheffN, sample = FALSE)
   
-  catch_resnss <- atlantisom::sample_fish(catch_aggresnss, fisheffN, sample = FALSE)
+  catch_resnss <- sample_fish_box(catch_aggresnss, fisheffN, sample = FALSE)
   
   # these fishery lengths and weight at age are each output timestep
   #same structure as above for surveys, replicates follow age comp reps

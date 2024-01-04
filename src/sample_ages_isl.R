@@ -5,7 +5,6 @@ sample_ages <- function(dat,prop,ageErr=NULL) {
   #assumes that input is aggregated over the necessary columns (box, layer)
   
   #need to use output from sample_fish
-  
   dat$numAtAgeSamp <- dat$ageComp <- NA
   
   out <- data.frame(species = NULL,
@@ -71,37 +70,41 @@ sample_ages_isl <- function(dat, prop){
   sampling_fun <- function(dat, prop){
     
     ind <- sample(1:sum(dat$atoutput), prop*sum(dat$atoutput), replace = FALSE)
-    ages <- rep(dat$agecl, dat$atoutput)[ind]
     
-    ## Age-length data?
-    if ('lower.bins' %in% names(dat)){
-      samps <- paste(ages, 
-                     rep(dat$lower.bins, dat$atoutput)[ind],
-                     rep(dat$upper.bins, dat$atoutput)[ind], sep = '-')
-      dat$id <- paste(dat$agecl, dat$lower.bins, dat$upper.bins, sep = '-')
+    if (length(ind) > 0){
+      ages <- rep(dat$agecl, dat$atoutput)[ind]
+      
+      ## Age-length data?
+      if ('midlength' %in% names(dat)){
+        samps <- paste(ages, 
+                       rep(dat$midlength, dat$atoutput)[ind], sep = '-')
+        dat$id <- paste(dat$agecl, dat$midlength, sep = '-')
+      }else{
+        samps <- ages
+        dat$id <- dat$agecl
+      }
+      #print(unique(dat$id))
+      sampTable <- as.data.frame(table(id = samps), stringsAsFactors = FALSE, responseName = 'numAtAgeSamp')
+      
+      ## Merge in numbers
+      out <- merge(dat, sampTable, by = 'id', all = TRUE)
+      out$numAtAgeSamp[is.na(out$numAtAgeSamp)] <- 0
     }else{
-      samps <- ages
-      dat$id <- dat$agecl
+      out <- dat
+      out$numAtAgeSamp <- 0
     }
-    
-    sampTable <- as.data.frame(table(id = samps), stringsAsFactors = FALSE, responseName = 'numAtAgeSamp')
-    
-    ## Merge in numbers
-    out <- merge(dat, sampTable, by = 'id', all = TRUE)
-    out$numAtAgeSamp[is.na(out$numAtAgeSamp)] <- 0
-    
     return(out[, names(out) != 'id'])
-    
   }
   
-  ## Loop over species
-  by_species <- lapply(split(dat, dat$species), function(sdat, prop){
-    sp <- prop[prop$species == unique(sdat$species), 'prop']
-    ## And time
-    return(do.call('rbind', lapply(split(sdat, sdat$time), sampling_fun, sp)))
-  }, prop = prop)
+  ## Create a unique id for looping
+  dat$id <- paste(dat$species, dat$polygon, dat$time)
+  out <- 
+    do.call('rbind',
+            lapply(split(dat, dat$id), function(x, prop){
+              sp <- prop[prop$species == unique(x$species), 'prop']
+              return(sampling_fun(x, sp))
+            }, prop = prop))
   
-  out <- do.call('rbind', by_species)
   if ('lower.bins' %in% names(dat)) out <- out[order(out$species, out$time, out$lower.bins),]
   else  out <- out[order(out$species, out$time),]
   rownames(out) <- 1:nrow(out)

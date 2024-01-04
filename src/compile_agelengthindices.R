@@ -1,4 +1,4 @@
-compile_age2length <- function(surveys, omlist_ss){
+compile_lengthindices <- function(surveys, omlist_ss){
   
   # Script for dimension parameters
   source("config/omdimensions.R", local = TRUE)

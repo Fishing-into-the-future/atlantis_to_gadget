@@ -18,14 +18,14 @@ fishspp <- omlist_ss$species_ss
 nyears <- 73
 
 #Atlantis initialization period in years
-burnin <- 0
+burnin <- 12
 
 # same time dimensioning parameters as in surveycensus.R
 #Vector of indices of catch in numbers to pull (by timestep to sum)
 fish_sample_full <- c(0:(noutsteps-1))  #total_sample defined in sardinesurvey.R
 fish_burnin <- burnin*fstepperyr+1
 fish_nyears <- nyears*fstepperyr
-fish_times <- fish_sample_full[fish_burnin:(fish_burnin+fish_nyears-1)]
+fish_times <- fish_burnin:(fish_nyears)#fish_sample_full[fish_burnin:(fish_nyears)]
 fish_timesteps <- seq(fish_times[fstepperyr], max(fish_times), by=fstepperyr) #last timestep
 #fish_years <- unique(floor(fish_times/fstepperyr)+1) # my original
 fish_years <- unique(floor(fish_times/fstepperyr)) #from Christine's new sardine_config.R
@@ -40,9 +40,12 @@ fishboxes <- c(0:(omlist_ss$boxpars$nbox - 1))
 # effective sample size needed for sample_fish
 # this effective N is divided by the number of annual timesteps below, so 200 per time
 # use as input to the length samples, ages can be a subset
-fisheffN <- data.frame(species=survspp, effN=rep(100000, length(survspp)))
+fisheffN <- data.frame(species=survspp, effN=rep(250000, length(survspp)))
 
 age_prop <- data.frame(species = 'Cod', prop = 0.1)
+# max size bin for length estimation, function defaults to 150 cm if not supplied
+maxbin <- 200
+lenage_cv <- 0.13
 
 #this adjusts for subannual fishery output so original effN is for whole year
 fisheffN$effN <- fisheffN$effN/fstepperyr 

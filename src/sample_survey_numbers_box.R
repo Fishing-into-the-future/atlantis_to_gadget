@@ -49,7 +49,7 @@
 
 
 sample_survey_numbers_box <- function(dat,cv) {
-  
+ 
   #calculate total numbers and partition to boxes
   ###  otherwise some assumptions about box-specific cv have to be made
   ###  this makes sure that box-specific numbers add up to total observed numbers
@@ -75,10 +75,10 @@ sample_survey_numbers_box <- function(dat,cv) {
   #sum over boxes and ages (the sampled boxes were already subset in create functions)
   # Bbox <- aggregate(dat2$biomass,list(dat2$species,dat2$polygon),sum)
   # names(Bbox) <- c("species","polygon","biomassBox")
-  
-  Nbox <- aggregate(list(numbersBox = dat$numbers),
+  Nbox <- aggregate(list(numbersBoxAge = dat$numbers),
                     by = list(species = dat$species, 
                               polygon = dat$polygon,
+                              agecl = dat$agecl,
                               time = dat$time),
                     sum)
   
@@ -91,14 +91,15 @@ sample_survey_numbers_box <- function(dat,cv) {
   # Bbox3 <- merge(Bbox2,totBobs,by="species",all.x=TRUE)
   # Bbox3$obsBbox <- Bbox3$obsBiomass*Bbox3$propB
   
-  Nbox3 <- merge(Nbox2,totNobs,by=c("species", 'time'),all.x=TRUE)
+  Nbox3 <- merge(Nbox2,totNobs,by=c("species", 'time', 'numbers'),all.x=TRUE)
   Nbox3$obsNbox <- Nbox3$obsNumbers*Nbox3$propN
   
   #output (observed biomass by box, which adds up to the appropriate total biomass)
   out <- data.frame(species=Nbox3$species,
-    	              agecl = NA,
+    	              agecl = Nbox3$agecl,
     	              polygon=Nbox3$polygon,
-    	              layer=NA, time=Nbox3$time,
+    	              layer=NA, 
+                    time=Nbox3$time,
     	              atoutput=Nbox3$obsNbox)
   
   return(out)
