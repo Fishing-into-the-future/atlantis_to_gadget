@@ -24,7 +24,7 @@ compile_age2length <- function(surveys, omlist_ss){
                                      boxes = survboxes) %>% 
     dplyr::mutate(layer = NA) %>% 
     dplyr::rename(atoutput = medatoutput)
-    
+  
     ## Convert to lengths
     out <- parallel::mclapply(surveys, function(x){
         

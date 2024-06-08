@@ -7,6 +7,10 @@
 ## Initial numbers
 # One parameter per age group per stock
 initabun <- gadget3::g3a_renewal_initabund(by_stock = TRUE, by_stock_f = stocks)
+if (simple_initial_conditions){
+  tmp <- ~if (age == 0) 0L else 1L
+  initabun <- gadget3::g3a_renewal_initabund(by_stock = TRUE, by_stock_f = stocks, init = tmp)
+}
 initvonb <- gadget3::g3a_renewal_vonb(recage = gadget3::g3_stock_def(imm_stock, 'minage'), by_stock = stocks)
 
 # Use a CV for initial sds

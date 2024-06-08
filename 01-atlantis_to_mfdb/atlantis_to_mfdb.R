@@ -10,7 +10,7 @@ library(atlantisom)
 library(gadget3)
 library(gadgetutils)
 library(tidyverse)
-library(mfdbatlantis)
+#library(mfdbatlantis)
 library(mfdb)
 
 ## Read in local scripts - modified scripts from atlantisom allowing > 10 cohorts
@@ -24,7 +24,7 @@ source('src/sample_ages_isl.R')
 source('src/calc_age2length_isl.R')
 source('src/sample_survey_biomass_box.R')
 source('src/sample_survey_numbers_box.R')
-source('src/compile_lengthindices.R')
+#source('src/compile_lengthindices.R')
 source('src/create_polygon_scale.R')
 source('src/sample_fish_box.R')
 
@@ -35,14 +35,15 @@ source('src/compile_fisherycomps.R')
 source('src/create_sim_biolpar.R')
 source('src/create_sim_startpars.R')
 
+load(file = "01-atlantis_to_mfdb/data/selection_by_age.Rdata")
+
 
 ## Some variables
 atlantis_dir <- '../../Atlantis/AtlantisIceland/v6610'
 base_dir <- '01-atlantis_to_mfdb'
 
 nreps <- 100
-sampling_id <- paste0('v12_effic0.5_reps', nreps)
-#sampling_id <- 'TMP'
+sampling_id <- paste0('v16_Scv02_reps', nreps)
 
 species_ss <- 'Cod'
 origin_year <- 1948
@@ -100,18 +101,20 @@ surveys <- list('IGFS' = compile_surveyreplicates("config/isl_survey_igfs.R", ic
                 'AUT'  = compile_surveyreplicates("config/isl_survey_aut.R", iceom_ms, nreps))
 gc()
 
-survey_indices <- list('IGFS' = compile_lengthdists(surveys$IGFS, iceom_ms, ncores = 50),
-                       'AUT'  = compile_lengthdists(surveys$AUT, iceom_ms, ncores = 50))
-gc()
+#survey_indices <- list('IGFS' = compile_lengthdists(surveys$IGFS, iceom_ms, ncores = 50),
+#                       'AUT'  = compile_lengthdists(surveys$AUT, iceom_ms, ncores = 50))
+#gc()
 
-composition_data <- list('IGFS' = compile_surveycomps(surveys$IGFS, iceom_ms, ncores = 50),
-                         'AUT'  = compile_surveycomps(surveys$AUT, iceom_ms, ncores = 50),
-                         'SEA'  = compile_fisherycomps(c("config/isl_fishery.R"), iceom_ms, nreps, ncores = 50)
-                         )
+composition_data <- list()
+composition_data[['IGFS']] <- compile_surveycomps(surveys$IGFS, iceom_ms, ncores = 50)
+composition_data[['AUT']] <- compile_surveycomps(surveys$AUT, iceom_ms, ncores = 50)
+composition_data[['SEA']] <- compile_fisherycomps(c("config/isl_fishery.R"), iceom_ms, nreps, ncores = 50)
+
 gc()
 
 ## Save data
-saveRDS(survey_indices, file = file.path(out_path, 'survey_indices.rds'))
+saveRDS(surveys, file = file.path(out_path, 'surveys.rds'))
+#saveRDS(survey_indices, file = file.path(out_path, 'survey_indices.rds'))
 saveRDS(composition_data, file = file.path(out_path, 'composition_data.rds'))
 
 ################################################################################
@@ -185,9 +188,9 @@ mfdb_import_species_taxonomy(mdb,
 ## over replicates
 
 ## Sampling types
-mfdb_import_sampling_type(mdb, data.frame(id = 0:100,
-                                          name = 0:100,
-                                          description = c('baseline', paste0('replicate', 1:100))))
+mfdb_import_sampling_type(mdb, data.frame(id = 0:nreps,
+                                          name = 0:nreps,
+                                          description = c('baseline', paste0('replicate', 1:nreps))))
 
 ## -----------------------------------------------------------------------------
 ## Subannual landings
@@ -237,32 +240,35 @@ mfdb_import_survey(mdb,
 ## Survey data
 ## -----------------------------------------------------------------------------
 
-cat('IMPORTING SURVEY INDICES NUMBERS\n')
-cat('Igfs\n\n')
-
-mfdb::mfdb_import_survey(
-  mdb,
-  survey_indices$IGFS %>% 
-    bind_rows(.id = 'sampling_type') %>% 
-    left_join(iceom_ms$time_lookup, by = 'time') %>% 
-    mutate(areacell = paste0('Box', polygon),
-           species = toupper(species)) %>% 
-    rename(length = midlength, count = atoutput) %>% 
-    select(year,month,areacell,species,sampling_type,length,count),
-  data_source = 'atlantis_igfs_si')
-
-cat('Aut\n\n')
-
-mfdb::mfdb_import_survey(
-  mdb,
-  survey_indices$AUT %>% 
-    bind_rows(.id = 'sampling_type') %>% 
-    left_join(iceom_ms$time_lookup, by = 'time') %>% 
-    mutate(areacell = paste0('Box', polygon),
-           species = toupper(species)) %>% 
-    rename(length = midlength, count = atoutput) %>% 
-    select(year,month,areacell,species,sampling_type,length,count),
-  data_source = 'atlantis_aut_si')
+## No longer doing SIs this way... just counting the ldist frequencies now
+if (FALSE){
+  cat('IMPORTING SURVEY INDICES NUMBERS\n')
+  cat('Igfs\n\n')
+  
+  mfdb::mfdb_import_survey(
+    mdb,
+    survey_indices$IGFS %>% 
+      bind_rows(.id = 'sampling_type') %>% 
+      left_join(iceom_ms$time_lookup, by = 'time') %>% 
+      mutate(areacell = paste0('Box', polygon),
+             species = toupper(species)) %>% 
+      rename(length = midlength, count = atoutput) %>% 
+      select(year,month,areacell,species,sampling_type,length,count),
+    data_source = 'atlantis_igfs_si')
+  
+  cat('Aut\n\n')
+  
+  mfdb::mfdb_import_survey(
+    mdb,
+    survey_indices$AUT %>% 
+      bind_rows(.id = 'sampling_type') %>% 
+      left_join(iceom_ms$time_lookup, by = 'time') %>% 
+      mutate(areacell = paste0('Box', polygon),
+             species = toupper(species)) %>% 
+      rename(length = midlength, count = atoutput) %>% 
+      select(year,month,areacell,species,sampling_type,length,count),
+    data_source = 'atlantis_aut_si')
+}
 
 ## -----------------------------------------------------------------------------
 ## Compositions
@@ -280,7 +286,7 @@ mfdb::mfdb_import_survey(
            species = toupper(species)) %>% 
     rename(length = midlength, count = atoutput) %>% 
     select(year,month,areacell,species,sampling_type,length,count),
-  data_source = 'atlantis_igfs_ldist')
+  data_source = 'iceland-ldist-IGFS')
 
 cat('Aut\n')
 
@@ -293,7 +299,7 @@ mfdb::mfdb_import_survey(
            species = toupper(species)) %>% 
     rename(length = midlength, count = atoutput) %>% 
     select(year,month,areacell,species,sampling_type,length,count),
-  data_source = 'atlantis_aut_ldist')
+  data_source = 'iceland-ldist-AUT')
 
 cat('Sea\n')
 
@@ -306,7 +312,7 @@ mfdb::mfdb_import_survey(
            species = toupper(species)) %>% 
     rename(length = midlength, count = atoutput) %>% 
     select(year,month,areacell,species,sampling_type,length,count),
-  data_source = 'atlantis_sea_ldist')
+  data_source = 'iceland-ldist-SEA')
 
 cat('IMPORTING AGE-LENGTH DISTRIBUTIONS\n')
 cat('Igfs\n')
@@ -317,10 +323,11 @@ mfdb::mfdb_import_survey(
     bind_rows(.id = 'sampling_type') %>% 
     left_join(iceom_ms$time_lookup, by = 'time') %>% 
     mutate(areacell = paste0('Box', polygon),
-           species = toupper(species)) %>% 
+           species = toupper(species),
+           agecl = as.integer(agecl)) %>% 
     rename(length = midlength, count = atoutput, age = agecl) %>% 
     select(year,month,areacell,age,species,sampling_type,length,count),
-  data_source = 'atlantis_igfs_aldist')
+  data_source = 'iceland-aldist-IGFS')
 
 cat('Aut\n')
 
@@ -330,10 +337,11 @@ mfdb::mfdb_import_survey(
     bind_rows(.id = 'sampling_type') %>% 
     left_join(iceom_ms$time_lookup, by = 'time') %>% 
     mutate(areacell = paste0('Box', polygon),
-           species = toupper(species)) %>% 
+           species = toupper(species),
+           agecl = as.integer(agecl)) %>% 
     rename(length = midlength, count = atoutput, age = agecl) %>% 
     select(year,month,areacell,age,species,sampling_type,length,count),
-  data_source = 'atlantis_aut_aldist')
+  data_source = 'iceland-aldist-AUT')
 
 cat('Sea\n')
 
@@ -347,7 +355,7 @@ if (FALSE){
              species = toupper(species)) %>% 
       rename(length = midlength, count = atoutput, age = agecl) %>% 
       select(year,month,areacell,age,species,sampling_type,length,count),
-    data_source = 'atlantis_sea_aldist')
+    data_source = 'iceland-aldist-SEA')
 }
 
 # ---------------------------------------------------

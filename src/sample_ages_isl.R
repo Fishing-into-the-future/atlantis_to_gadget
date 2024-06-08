@@ -22,6 +22,7 @@ sample_ages <- function(dat,prop,ageErr=NULL) {
     
     #do sampling for each species
     pp <- prop[prop$species==sp,"prop"]
+    
     for(y in unique(dat$time)) {
       ind <- dat$species == sp & dat$time == y
       
@@ -69,7 +70,9 @@ sample_ages_isl <- function(dat, prop){
   
   sampling_fun <- function(dat, prop){
     
-    ind <- sample(1:sum(dat$atoutput), prop*sum(dat$atoutput), replace = FALSE)
+    ind <- sample(1:sum(dat$atoutput), 
+                  round(prop*sum(dat$atoutput),0), 
+                  replace = FALSE)
     
     if (length(ind) > 0){
       ages <- rep(dat$agecl, dat$atoutput)[ind]
@@ -93,9 +96,10 @@ sample_ages_isl <- function(dat, prop){
       out <- dat
       out$numAtAgeSamp <- 0
     }
+    #if (any(is.na(out$time))) browser()
     return(out[, names(out) != 'id'])
   }
-  
+  #browser()
   ## Create a unique id for looping
   dat$id <- paste(dat$species, dat$polygon, dat$time)
   out <- 

@@ -66,7 +66,7 @@ calc_age2length_isl <- function(structn, resn, nums,
   if(any(spmax$maxlenbin<spmax$maxmulen)){
     print("Warning: maximum bin size is smaller than the longest fish in the sample. Fish above the maximum bin size will be removed from length compositions.")
   }
-  
+ 
   tmp <- lapply(split(nums, 1:nrow(nums)), function(x, maxbin, CVlenage){
    
     group <- x$species

@@ -12,7 +12,7 @@ compile_fisherycomps <- function(fishery, omlist_ss, nreps, ncores = parallel::d
                                                       boxes = fishboxes)
   
   ## Create polygon*time scale for survey s
-  fishery_scale <- create_polygon_scale(omlist_ss, survey = FALSE, fisheffN)
+  fishery_scale <- create_polygon_scale(omlist_ss, survey = FALSE, fisheffN, boxes = fishboxes)
   
   ## (1) Sample age composition data
   agecomps <- parallel::mclapply(setNames(0:nreps, 0:nreps), function(x, fishery_scale){

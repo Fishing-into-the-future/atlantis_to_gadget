@@ -11,11 +11,12 @@ compile_lengthdists <- function(surveys, omlist_ss, fishery = FALSE, ncores = pa
   ## Aggregate over lengths
   out <- 
     tmp %>% 
-    map(function(x){
+    purrr::map(function(x){
       return(
         x %>% 
           dplyr::group_by(species, polygon, time, midlength) %>%
-          dplyr::summarise(atoutput = sum(atoutput), .groups = 'drop')
+          dplyr::summarise(atoutput = sum(atoutput), .groups = 'drop') #%>% 
+          #dplyr::mutate(atoutput = round(atoutput, 0))
       )
     })
   return(out)

@@ -2,6 +2,7 @@ sample_fish_box <- function(dat, scale, sample = TRUE) {
   
   #TODO: parameterize effN to vary with time period
   if(sample){
+   
     #sum over layers
     dat2 <- aggregate(list(numAtAge = dat$atoutput), list(species = dat$species,
                                                           agecl = dat$agecl,
@@ -22,7 +23,7 @@ sample_fish_box <- function(dat, scale, sample = TRUE) {
                      
                      if(nn > totalNums) {
                        nn <- totalNums
-                       message("effN is greater than total numbers available, so nEff set equal to ", nn," for species ",sp," and time ",y,"\n")
+                       message("effN is greater than total numbers available, so nEff set equal to ", nn," for species ",unique(x$species)," and time ",unique(x$time),"\n")
                      }
                      probs <- matrix(x$numAtAge,nrow=1)
                      
@@ -30,7 +31,7 @@ sample_fish_box <- function(dat, scale, sample = TRUE) {
                        x$numAtAgeSamp <- rmultinom(1,nn,probs)[,1]
                      } else { # sample is 0 if probs vector all 0s, no fish that year
                        x$numAtAgeSamp <- rep(0, length(probs))
-                       message("total numAtAge ", nn,", assigning 0 sample for species ",sp," and time ",y,"\n")
+                       message("total numAtAge ", nn,", assigning 0 sample for species ",unique(x$species)," and time ",unique(x$time),"\n")
                      }
                      return(x[,c('species','agecl','polygon','time',"numAtAgeSamp")])
                      }))

@@ -23,7 +23,7 @@ timestep <- stepperyr # 4
 
 #survey_sample_time <- 4 # autumn survey
 survey_sample_time <- 10 # autumn survey, month
-survey_start_year <- 1980
+survey_start_year <- 2000
 
 # The last timestep to sample
 #total_sample <- noutsteps-1 # 262
@@ -41,12 +41,12 @@ survtime <- survey_sample_full
 
 # survey area
 # should return all model areas
-survboxes <- allboxes
+survboxes <- allboxes#[!(allboxes %in% c(0:4,8:13,24:29,38:52))]
 
 # survey efficiency (q)
 # should return a perfectly efficient survey 
 surveffic <- data.frame(species=survspp,
-                        efficiency=rep(0.5, length(survspp)))
+                        efficiency=rep(0.00012, length(survspp)))
 
 # survey selectivity (agecl based)
 # this is by age class, need to change to use with ANNAGEBIO output
@@ -58,7 +58,7 @@ if (FALSE){
   # for annage output uses names(annages) NOT alphabetical survspp
   survselex <- data.frame(species=rep(names(annages), n_annages), #  
                           agecl=unlist(sapply(n_annages,seq)),
-                          selex= c(0.1,0.3,0.5,0.7,0.8,0.9,0.95,1,1,1,1,1,1,1,1,1))#c(rep(0, 3), rep(1.0,sum(n_annages-3))))  
+                          selex=c(selpars$s, 1, 1)) #c(rep(0, 3), rep(1.0,sum(n_annages-3))))
 }
 
 survselex.agecl <- survselex
@@ -70,7 +70,7 @@ surveffN <- data.frame(species=survspp, effN=rep(15000, length(survspp)))
 
 # survey index cv needed for sample_survey_xxx
 # cv = 0.1
-surv_cv <- data.frame(species=survspp, cv=rep(0.1,length(survspp)))
+surv_cv <- data.frame(species=survspp, cv=rep(0.2,length(survspp)))
 #surv_cv <- data.frame(species=survspp, cv=rep(0,length(survspp)))
 
 age_prop <- data.frame(species=survspp, prop=0.25)

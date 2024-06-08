@@ -1,8 +1,9 @@
-create_polygon_scale <- function(omlist_ss, survey, effN){
+create_polygon_scale <- function(omlist_ss, survey, effN, boxes){
   
   if (survey){
     out <- 
       omlist_ss$truenums_ss %>% 
+      filter(polygon %in% boxes) %>% 
       group_by(species, polygon, time) %>% 
       summarise(numbers = sum(atoutput), .groups = 'drop') %>% 
       left_join(
@@ -14,7 +15,7 @@ create_polygon_scale <- function(omlist_ss, survey, effN){
       group_by(time) %>% 
       mutate(scale = density/sum(density)) %>% 
       dplyr::ungroup() %>% 
-      dplyr::left_join(effN, by = 'species') %>% 
+      dplyr::left_join(effN, by = c('species')) %>% 
       dplyr::mutate(effN = round(effN * scale, 0)) %>% 
       dplyr::select(species, time, polygon, effN) %>% 
       dplyr::filter(time > 0)  
@@ -24,6 +25,7 @@ create_polygon_scale <- function(omlist_ss, survey, effN){
     ## For commercial data, we'll split effN between polygons using total catch per polygon per timestep
     out <- 
       omlist_ss$truecatchtons_ss %>% 
+      dplyr::filter(polygon %in% boxes) %>% 
       dplyr::group_by(species, time, polygon) %>% 
       dplyr::summarise(catch = sum(atoutput), .groups = 'drop') %>% 
       dplyr::group_by(species, time) %>% 

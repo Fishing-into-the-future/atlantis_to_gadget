@@ -31,6 +31,11 @@ compile_surveyreplicates <- function(survey, omlist_ss, nreps){
   }
   
   out <- c(out, tmp)
+  ## Round to whole numbers
+  out <- lapply(out, function(x){
+    x$atoutput <- round(x$atoutput, 0) 
+    return(x)
+  })
   attributes(out)$configfile <- survey
   return(out)
   

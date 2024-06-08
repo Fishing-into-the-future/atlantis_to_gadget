@@ -35,7 +35,7 @@ fishtime <- fish_times
 
 # fishery sampling area
 # should return all model areas, this assumes you see everything that it caught
-fishboxes <- c(0:(omlist_ss$boxpars$nbox - 1))
+fishboxes <- c(0:(omlist_ss$boxpars$nbox - 1))#[!(c(0:(omlist_ss$boxpars$nbox - 1)) %in% c(0:4,8:13,24:29,38:52))]
 
 # effective sample size needed for sample_fish
 # this effective N is divided by the number of annual timesteps below, so 200 per time

@@ -6,13 +6,19 @@ compile_surveycomps <- function(surveys, omlist_ss, ncores = parallel::detectCor
   source(attr(surveys, 'configfile'), local = TRUE)
   
   ## Create polygon*time scale for survey s
-  survey_scale <- create_polygon_scale(omlist_ss, survey = TRUE, surveffN)
+  #survey_scale <- create_polygon_scale(omlist_ss, survey = TRUE, surveffN)
   
   ## (1) Sample age composition data
   agecomps <- parallel::mclapply(surveys, function(x, survey_scale){
-    return(
-      sample_fish_box(x, survey_scale)
-    )
+    
+    ## Create polygon*time scale for survey s
+    survey_scale <- 
+      x %>% 
+      group_by(species, time, polygon) %>% 
+      summarise(effN = sum(atoutput), .groups = 'drop')
+    
+    return(sample_fish_box(x, survey_scale))
+    
   }, survey_scale = survey_scale, mc.cores = ncores)
   
   ## Add attribute
